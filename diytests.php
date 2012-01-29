@@ -501,7 +501,7 @@ function testdiy_init() {
 
                 } // end function
         } // end class
-        $testdiy = new TestDiy();
+        $testdiy = new TestDiy(__FILE__); 
     } // end if class exists
 } // end init
 
