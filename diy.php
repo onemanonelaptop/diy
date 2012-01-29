@@ -1621,7 +1621,9 @@ function diy_init() {
                                         notyetpicked.blur(function () {jQuery(this).next("div.picker").hide();});';
                             
                             // Add the picked class so we dont attach things twice
-                            print '     jQuery(this).addClass("picked");';
+                            print '     notyetpicked.each(function () {';
+                            print '         jQuery(this).addClass("picked");';
+                            print '     });';
                             print '}'; // end of diy_picker()
 
                             // Enable all color pickers
