@@ -1711,7 +1711,7 @@ function diy_init() {
                 } // end function
 
 
-                function diy_meta($post_id,$group,$field,$instance = 0) {
+                function diy_post_meta($post_id,$group,$field,$instance = 0) {
                         $result = array();
                         $result = get_post_meta($post_id,$group,true);
 
