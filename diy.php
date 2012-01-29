@@ -1495,7 +1495,7 @@ function diy_init() {
                             });'; 
 
                             // If the add group button is pressed
-                            print '$(".another-group").live("click",function(event) {
+                            print '$("body").on("click",".another-group",function(event) {
                                     event.preventDefault();
 
                                     var max = $(this).closest(".field-group-wrapper").data("max");
