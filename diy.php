@@ -28,7 +28,7 @@
 // Ensure the class is available to all dependant plugins by using plugins_loaded
 add_action( 'plugins_loaded', 'diy_init' );
 /**
-* Runs on plugins_loaded action and defines the Diy Class
+* Runs on plugins_loaded action and defines the Diy Class 
 *   
 * @since    0.1
 * @access   public
@@ -1173,57 +1173,70 @@ function diy_init() {
                     * @return   void
                     */ 
                     function diy_save_post( $post_id ) {
-                            global $post, $new_meta_boxes;
+                        global $post, $new_meta_boxes;
 
-                            // Stop WP from clearing custom fields on autosave
-                            if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)
-                                return;
+                        // Stop WP from clearing custom fields on autosave
+                        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)
+                            return;
 
-                            // Prevent quick edit from clearing custom fields
-                            if (defined('DOING_AJAX') && DOING_AJAX)
-                                return;
+                        // Prevent quick edit from clearing custom fields
+                        if (defined('DOING_AJAX') && DOING_AJAX)
+                            return;
 
-                            // only save if we have something to save
-                            if (isset($_POST['post_type'])  && $_POST['post_type'] && $this->meta[$_POST['post_type']]  ) {
-                         
-                                    // go through each of the registered post metaboxes
-                                    foreach ($this->meta[$_POST['post_type']] as $section_name => $section) {
+                        // Check some permissions
+                        if ( 'page' == $_POST['post_type'] ) {
+                                if ( !current_user_can( 'edit_page', $post_id ))
+                                return $post_id;
+                        } else {
+                                if ( !current_user_can( 'edit_post', $post_id ))
+                                return $post_id;
+                        }
+                        
+                        // only save if we have something to save
+                        if (isset($_POST['post_type'])  && $_POST['post_type'] && $this->meta[$_POST['post_type']]  ) {
 
-                                            foreach($section as $group_name => $group) {
-                                              
+                            // go through each of the registered post metaboxes
+                            foreach ($this->meta[$_POST['post_type']] as $section_name => $section) {
 
-                                                    $data = $_POST[$group['group']];
+                                // Go through each group in the metabox
+                                foreach($section as $group_name => $group) {
+                                    
+                                    // Get the post data for this field group
+                                    $data = $_POST[$group['group']];
 
-
-                                            // save fields only for the current custom post type.	
-                                            foreach($group['fields'] as $field_name => $field) {
-                                                        //print "Field Name: " . $field_name . "<br>";
-
-
-                                            // Check some permissions
-                                            if ( 'page' == $_POST['post_type'] ) {
-                                                    if ( !current_user_can( 'edit_page', $post_id ))
-                                                    return $post_id;
-                                            } else {
-                                                    if ( !current_user_can( 'edit_post', $post_id ))
-                                                    return $post_id;
-                                            }
-
-                                            // Convert autosuggest value to a post id
-                                            $data= $this->suggest_to_id($data);
-
-                                            // if no post id is found then kill the autocomplete thinger
-
-                                            if(get_post_meta($post_id, $group['group']) == "")
-                                                    add_post_meta($post_id, $group['group'], $data, true);
-                                            elseif($data != get_post_meta($post_id, $group['group'], true))
-                                                    update_post_meta($post_id, $group['group'], $data);
-                                            elseif($data == "")
-                                                    delete_post_meta($post_id, $group['group'], get_post_meta($post_id, $group['group'], true));
-                                            }
-                                            }
+                                    // Convert autosuggest value to a post id
+                                    $data= $this->suggest_to_id($data);
+                                        
+                                    if(get_post_meta($post_id, $group['group']) == "") {
+                                        add_post_meta($post_id, $group['group'], $data, true);
+                                    } elseif ($data != get_post_meta($post_id, $group['group'], true)) {
+                                        update_post_meta($post_id, $group['group'], $data);
+                                    } elseif($data == "") {
+                                        delete_post_meta($post_id, $group['group'], get_post_meta($post_id, $group['group'], true));
                                     }
-                            } //end if isset
+                                    
+                                    // save fields only for the current custom post type.	
+                                    foreach($group['fields'] as $field_name => $field) {
+                                        // if field is set to have expanded post meta
+                                        if ($field['expanded'] == true) {
+                                            // for each saved instance of this field save some post meta
+                                            foreach ($data as $key => $instance) {
+                                                $meta_field_name = $group['group'] . '_' . $key . '_' . $field_name;
+                                                if(get_post_meta($post_id,  $meta_field_name) == "") {
+                                                    add_post_meta($post_id,  $meta_field_name,  $data[$key][$field_name], true);
+                                                } elseif ($data[$key][$field_name] != get_post_meta($post_id, $meta_field_name, true)) {
+                                                    update_post_meta($post_id,  $meta_field_name,  $data[$key][$field_name]);
+                                                } elseif($data[$key][$field_name] == "") {
+                                                    delete_post_meta($post_id,  $meta_field_name, get_post_meta($post_id,  $meta_field_name, true));
+                                                }
+                                            }
+                                            
+                                        } // endif
+                                    } // end foreach
+                                    
+                                } // end foreach
+                            } // end foreach
+                        } //end if isset
                     } // end function
 
                     /**
@@ -1684,47 +1697,31 @@ function diy_init() {
                             print '});';
 
                     } // end function
+                } // end class definition
+
+                function diy_option($group,$id,$instance = 0) {
+                    $result = array();
+                    $result = get_option($group);
+
+                    if (is_array($result)) {
+                            return $result[$instance][$id];
+                    } else {
+                            return '';
+                    }
+                } // end function
 
 
+                function diy_meta($post_id,$group,$field,$instance = 0) {
+                        $result = array();
+                        $result = get_post_meta($post_id,$group,true);
 
-
-                    } // end class definition
-
-                    function diy_option($group,$id,$instance = 0) {
-                            $result = array();
-                            $result = get_option($group);
-
-                            if (is_array($result)) {
-                                    return $result[$instance][$id];
-                            } else {
-                                    return '';
-                            }
-            }
-
-
-                    function diy_meta($post_id,$group,$field,$instance = 0) {
-                            $result = array();
-                            $result = get_post_meta($post_id,$group,true);
-
-                            if (is_array($result)) {
-                                    return $result[$instance][$field];
-                            } else {
-                                    return '';
-                            }
-                    } // end function
-
-
-    function gpm($id,$field,$instance=0) {
-            // split on the open bracket
-            $exploded = explode('[',$field);
-            $root = get_post_meta($id,$exploded[0],true);
-            return $root[$instance];
-    }	
-    
-  
-  
-    
-    
+                        if (is_array($result)) {
+                                return $result[$instance][$field];
+                        } else {
+                                return '';
+                        }
+                } // end function
+                    
     } // end if class exists
 	
     // Run each of the dependant plugins own init methods
