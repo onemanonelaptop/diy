@@ -213,6 +213,50 @@ function testdiy_init() {
                         ) // end array
                     ); 
                     
+                     $this->field(
+			array(
+				"metabox" => "field-tests-single", // the id of the metabox this field resides inside
+				"group" => "test-location-single", // The form field name
+				"title" => "Location", // Title used when prompting for input
+				"max" => "1",
+				"fields" => array(
+					"map" => array(
+						"type" => "map",
+						"title" => "Select the  location by clicking on the map",
+						"label_style" => "block",
+						"description" => "",
+						"placeholder" => "",
+						"width" => "",
+						"height" => "250",
+						"tooltip" => "",
+						"latfield" => "test-location-single[0][latitude]",
+						"longfield" => "test-location-single[0][longitude]"
+					),
+					"latitude" => array(
+						"type" => "text",
+						"title" => "Latitude",
+						"label_style" => "inline",
+						"label_width" => "100",
+						"description" => "",
+						"placeholder" => "",
+						"width" => "",
+						"height" => "",
+						"tooltip" => ""
+					),
+					"longitude" => array(
+						"type" => "text",
+						"title" => "Longitude",
+						"label_style" => "inline",
+						"label_width" => "100",
+						"description" => "",
+						"placeholder" => "",
+						"width" => "",
+						"height" => "",
+						"tooltip" => ""
+					)
+				) // end fields
+			) // end array
+                             );
                     
                     // MULTI FIELD TESTS
                     
@@ -327,6 +371,52 @@ function testdiy_init() {
                         ) // end array
                     );
                       
+                     
+                     $this->field(
+			array(
+				"metabox" => "field-tests-multi", // the id of the metabox this field resides inside
+				"group" => "test-location-multi", // The form field name
+				"title" => "Location", // Title used when prompting for input
+				"max" => "1",
+				"fields" => array(
+					"map" => array(
+						"type" => "map",
+						"title" => "Select the  location by clicking on the map",
+						"label_style" => "block",
+						"description" => "",
+						"placeholder" => "",
+						"width" => "",
+						"height" => "250",
+						"tooltip" => "",
+						"latfield" => "test-location-multi[0][latitude]",
+						"longfield" => "test-location-multi[0][longitude]"
+					),
+					"latitude" => array(
+						"type" => "text",
+						"title" => "Latitude",
+						"label_style" => "inline",
+						"label_width" => "100",
+						"description" => "",
+						"placeholder" => "",
+						"width" => "",
+						"height" => "",
+						"tooltip" => ""
+					),
+					"longitude" => array(
+						"type" => "text",
+						"title" => "Longitude",
+						"label_style" => "inline",
+						"label_width" => "100",
+						"description" => "",
+						"placeholder" => "",
+						"width" => "",
+						"height" => "",
+						"tooltip" => ""
+					)
+				) // end fields
+			) // end array
+                             );
+                     
                     $this->field(
                         array(
                             "metabox" => "field-tests-multi", // the id of the metabox this field resides inside
