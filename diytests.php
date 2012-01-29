@@ -170,8 +170,11 @@ function testdiy_init() {
                             "max" => "1",
                             "fields" => array(
                                 "value" => array(
-                                    "type" => "text",
-                                    "description" => "Date Description"
+                                    "type" => "date",
+                                    "description" => "Date Description",
+                                    "numberofmonths" => "4",
+                                    "showothermonths" => "false",
+                                    "dateformat" => "dd/mm/yy"
                                 )
                             ) // end fields
                         ) // end array

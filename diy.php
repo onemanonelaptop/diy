@@ -784,8 +784,12 @@ function diy_init() {
                     * @return   void
                     */
                     function date($args) {
-                            // $args = $this->apply_name_fix($this->apply_default_args($args)) ;
-                            echo "<input class='field datepicker' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'/>";					
+                            if (!isset($args['showothermonths'])) { $args['showothermonths'] = 'false'; }
+                            if (!isset($args['dateformat'])) { $args['dateformat'] = 'mm/dd/yy'; }
+                            if (!isset($args['numberofmonths'])) { $args['numberofmonths'] = '2'; }
+                            // Apply the default date parameters in case they are not set
+                            echo "<input class='field datepicker' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'" .
+                                   "data-showothermonths='" . $args['showothermonths']. "' data-dateformat='" . $args['dateformat']. "' data-numberofmonths='" . $args['numberofmonths']. "'" . "/>";					
                             echo $this->description($args['description']);
                     } // function
 
@@ -1620,16 +1624,23 @@ function diy_init() {
                             // Enable all color pickers
                             print 'diy_picker();';
 
+                           
+                            
+                            // foreach date picker thats not date picked
+                            print 'function diy_dated() {';
+                            print '     var notyetdated = jQuery("input.datepicker:not(.dated)");';
+                             print '     notyetdated.each(function () {';
                             // Do the date picker using HTML5 data atrributes
-                            print 'jQuery( ".datepicker" ).datepicker({
-                                    defaultDate: "0",
-                                    numberOfMonths: 3,
-                                    showOtherMonths: true,
-                                    altFormat: "dd/mm/yy"
-                            });	';
+                            print '         jQuery(this).datepicker({
+                                                 defaultDate: "0",
+                                                 numberOfMonths: jQuery(this).data("numberofmonths"),
+                                                showOtherMonths: jQuery(this).data("showothermonths"),
+                                                dateFormat: jQuery(this).data("dateformat"),
+                                            })';
+                            print '     });';
+                            print '}'; // end of diy_dated()
 
-
-
+                            print 'diy_dated();';
 
                             print '
 
