@@ -1602,14 +1602,15 @@ function diy_init() {
                             
                             // Farbtastic it up for all .picker classes
                             print 'function diy_picker() {';
-                            print '     jQuery("input.picker:not(.picked)").each(function () {';
+                            print '     var notyetpicked = jQuery("input.picker:not(.picked)");';
+                            print '     notyetpicked.each(function () {';
                             print '         var saveid=jQuery(this);';
                             print '         jQuery(this).next("div.picker").farbtastic(function (color) { saveid.val(color.toUpperCase()).prev(".swatch").css("background",color); }); ';
                             print '     });';
                             
                             // Show and hide the picker 
-                            print '     jQuery("input.picker:not(.picked)").focus(function () {jQuery(this).next("div.picker").show();});
-                                        jQuery("input.picker:not(.picked)").blur(function () {jQuery(this).next("div.picker").hide();});';
+                            print '     notyetpicked.focus(function () {jQuery(this).next("div.picker").show();});
+                                        notyetpicked.blur(function () {jQuery(this).next("div.picker").hide();});';
                             
                             // Add the picked class so we dont attach things twice
                             print '     jQuery(this).addClass("picked");';
