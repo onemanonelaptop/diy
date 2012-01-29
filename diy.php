@@ -1026,7 +1026,6 @@ function diy_init() {
                         return $first_name . " " . $last_name . " [*". $id ."]";
                     } // function
 
-
                     /**
                     * Ajax callback function to return list of post types
                     *
@@ -1527,6 +1526,8 @@ function diy_init() {
                                             $(this).attr("name",
                                                             $(this).attr("name").replace(/\[(.*)\]\[/,"[" + (howmany) + "][")
                                             );
+                                            // remove the classes so the new fields get rebound with handlers
+                                            $(this).removeClass("suggested picked");
                                     });
 
                                     copied.insertBefore($(this));
@@ -1536,7 +1537,9 @@ function diy_init() {
                                             $(this).remove();
 
                                     }
+                                    // Attach handlers for any new fields that need them
                                     diy_picker();
+                                    diy_suggester();
                             });';
 
                           
@@ -1569,14 +1572,21 @@ function diy_init() {
                                             _send_to_editor(html);
                                     }
                             };';
-
+                            
+                            print 'function diy_suggester() {';
                             // Apply jquery suggest to textboxes with class .suggest
-                            print 'jQuery(".suggest").each(';
-                            print 'function () { ';
-                            print 'jQuery(this).suggest(';
-                            print 'ajaxurl + "?action=suggest_action&type=" + jQuery(this).data("suggest")';
-                            print ') });';
+                            print '     jQuery(".suggest:not(.suggested)").each(';
+                            print '         function () { ';
+                            print '             jQuery(this).suggest(';
+                            print '                 ajaxurl + "?action=suggest_action&type=" + jQuery(this).data("suggest")';
+                            print '             );';
+                            print '             jQuery(this).addClass("suggested");';
+                            print '         }';
+                            print '      );';
+                            print '}'; // end of diy_suggester()
 
+                            print 'diy_suggester();';
+                            
                             // Farbtastic it up for all .picker classes
                             print 'function diy_picker() {';
                             print '     jQuery("input.picker:not(.picked)").each(function () {';
