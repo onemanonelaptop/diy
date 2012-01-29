@@ -869,7 +869,7 @@ function diy_init() {
                     * @return   void
                     */ 
                     function color($args) {
-                            echo "<div class='inline-rel'>";
+                            echo "<div class='relative'>";
                             echo "<span style='background:" . (!empty($args['value']) ? $args['value'] : "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QzIwM0UzNzZEODc2MTFFMDgyM0RFQUJEOEU1NEI2NjkiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QzIwM0UzNzdEODc2MTFFMDgyM0RFQUJEOEU1NEI2NjkiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDMjAzRTM3NEQ4NzYxMUUwODIzREVBQkQ4RTU0QjY2OSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpDMjAzRTM3NUQ4NzYxMUUwODIzREVBQkQ4RTU0QjY2OSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Ps3q5KgAAAKOSURBVHjaXJRZTypBEIWZYVPgKsgeSAgQCUvgBeP//wGQyBaBRCFACKIgO7L7zdS94439MFTXqa5zqroapVqtXi6XdDpts9leXl4+Pz8jkUg4HN7tds/Pz4qiZLNZq9Xa6/XG47HX643H4wJZWIfDwWQyEcT3dDqxPZ/PJn0dj0dFX9g4f0FQKsvlEtf7+/t+vw8EAna7Hc9sNsPw+/3EQcixu7u76+vrr6+vj48PgUiqulyum5ubxWIxmUyurq7Y4sVerVZ/9DWfz9miEZtjBqRFkhgB0KIZTFVVDLZms5kuwGxAJCWSggVia+l2u0QUi0WONZtN9CcSiVgshtRyuUzE4+Mj306nMxgMQqHQ/f29QFrD0Ew+lJCP9G63m9D1ek1Lbm9vsYHISyQQhAZEvKYE5kqlgrdQKFDJaDR6fX2lqnw+D/T09ESfUqkUPaP+RqNhQBbqodskhvakL7zYeLBJjQEhMRJpQNoF1+t1IqhTJoHcwWCQO6Mx1ElEMpkEGg6H0+kU5dFoVCBkW7bbrVCxoRObzYYt0WTEplrujy+c1IVgA4Jf4dJlA8wY0CEkyX2wJZFApMADRP0CaUPCuPp8PlKgmcQIxouNSJ++uLx+vy9T5XA4DIiDP8xcgNPpRCEGtaCKrUAQQgWhiBdIGxJuhYiHhweO8VbgoUP0jxSlUun/IYGf18aQCPQzJOQjMYVxmVInzQOSITHry+Px0C0D+jskiOHqkZrJZCibIaEwhOVyOdBarUaTkEORvLZ2uy0QHKo8Zklh+rewZfIEEvsXpKGtVosfBgMZNA9VTAKqKOzt7Q2IOmkH/zC8czjhFwiniloO4GWq8RIBGzbt3ehLIAiBaLsBcfBbgAEArCsu6B0YK4AAAAAASUVORK5CYII=);")  ."' class='swatch'></span><input id='".$args['name']."' class=\"picker field\" type='text' data-tooltip='" .$args['tooltip']  . "' size='57'" . $this->placeholder('None') . "' name='" . $args['name'] . "' value='" . $args['value']  . "'/>";				
                             echo "<div  id='" . $args['name']  . "_picker' class='picker' style=''></div>";
                             echo $this->description($args['description']); // print a description if there is one
@@ -1323,8 +1323,8 @@ function diy_init() {
                             // Repeatable field group buttons
                             print '.field-group { padding: 0px 0 0px 0; margin-top: 0px; margin-bottom: 0px;}';
                             print '.field-group-multi .field-group {border-bottom: 1px solid #E3E3E3; margin: 0px 0 10px 0; }';
-                            print '.another-group {float:right; margin-top: 10px; }';
-                            print '.delete-group {float:right; margin-top: -34px; }';
+                            print '.another-group {float:right; margin-top: 10px; position: relative; }';
+                            print '.delete-group {float:right; margin-top: -34px; position: relative; }';
                             print '.field-group label.fl {float:left; line-height: 30px; }';
                             // Re-align the grippie 
                             print 'form#settings #post-body .wp_themeSkin .mceStatusbar a.mceResize  { top:-2px; }';
@@ -1347,7 +1347,7 @@ function diy_init() {
                             print '.swatch { cursor: pointer; width: 20px; height: 20px; position: absolute; left: 4px; display: block; -moz-border-radius: 2px; -webkit-border-radius: 2px; border-radius: 2px;
                             -moz-background-clip: padding; -webkit-background-clip: padding-box; background-clip: padding-box; top: 4px; }';
 
-                            print 'div.picker {position:absolute;display:none; z-index:9999; left:110px; bottom:-195px; background:#000000;-moz-border-radius: 10px; -webkit-border-radius: 10px; border-radius: 10px; }';
+                            print 'div.picker {position:absolute;display:none; z-index:9999; left:110px; bottom:-145px; background:#000000;-moz-border-radius: 10px; -webkit-border-radius: 10px; border-radius: 10px; }';
 
                             print "input.picker {height:28px; width:100px; margin-left:0px; cursor:pointer; margin-top:0px; padding-left: 30px;  font-size: 13px; background-color: white;
                             background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #eeeeee), color-stop(0.5, white));
@@ -1370,7 +1370,7 @@ function diy_init() {
 
                             // Form field styles
                             print 'input {background-color: white; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; -moz-background-clip: padding; -webkit-background-clip: padding-box; background-clip: padding-box; border: 1px solid #DFDFDF !important; color: #444;}';
-                            print '.inline-rel {position:relative; display:inline-block; height: 28px; width:105px; }';
+                            print '.relative {position:relative;}';
                             print '.field-suffix {padding-left:4px;}';
 
                             // Social Media icons on the plugin options page
