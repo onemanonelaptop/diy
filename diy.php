@@ -903,7 +903,7 @@ function diy_init() {
                     function attachment($args) {
                             // $args = $this->apply_name_fix($this->apply_default_args($args)) ;
                             echo "<div><input class='attachment field' id='" . $args['id'] . "' style='" .$this->width($args['width']) . "'  type='text' size='57' " . $this->placeholder($args['placeholder'] ) . " name='" . $args['name'] . "' value='" . $args['value']. "' />";
-                            echo "<input class='attachment_upload button-secondary' id='$name_button' type='button' value='Upload'/>";
+                            echo "<input class='attachment_upload button-secondary' id='" . $args['id'] . "-upload' type='button' value='Upload'/>";
 
                             // show a preview
                             $this->attachment_preview($args['value']);
@@ -1133,7 +1133,8 @@ function diy_init() {
 
                                 // Set the name attribute of the field
                                 $field['name'] = "" . $group['group'] . "[" . $counter . "][" . $field_name . "]";
-
+                                $field['id'] = $group['group'] . "-" . $counter . "-" . $field_name;
+                                
                                 // Set the current value of the field
                                 if (is_array($group_values)) {
                                         $field['value'] = $group_values[$counter][$field_name];
