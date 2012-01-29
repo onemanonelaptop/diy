@@ -1544,8 +1544,10 @@ function diy_init() {
                                             $(this).attr("name",
                                                             $(this).attr("name").replace(/\[(.*)\]\[/,"[" + (howmany) + "][")
                                             );
-                                            // remove the classes so the new fields get rebound with handlers
-                                            $(this).removeClass("suggested picked");
+                                            // remove the classes so the new fields get rebound with handlers#
+                                             if ($(this).hasClass("dated")) {$(this).attr("id",""); }
+                                            $(this).removeClass("suggested picked hasDatepicker dated");
+                                           
                                     });
 
                                     copied.insertBefore($(this));
@@ -1557,7 +1559,8 @@ function diy_init() {
                                     }
                                     // Attach handlers for any new fields that need them
                                     diy_picker();
-                                    diy_suggester();
+                                    diy_suggested();
+                                    diy_dated();
                             });';
 
                           
@@ -1591,7 +1594,7 @@ function diy_init() {
                                     }
                             };';
                             
-                            print 'function diy_suggester() {';
+                            print 'function diy_suggested() {';
                             // Apply jquery suggest to textboxes with class .suggest
                             print '     jQuery(".suggest:not(.suggested)").each(';
                             print '         function () { ';
@@ -1603,7 +1606,7 @@ function diy_init() {
                             print '      );';
                             print '}'; // end of diy_suggester()
 
-                            print 'diy_suggester();';
+                            print 'diy_suggested();';
                             
                             // Farbtastic it up for all .picker classes
                             print 'function diy_picker() {';
@@ -1636,8 +1639,10 @@ function diy_init() {
                                                  numberOfMonths: jQuery(this).data("numberofmonths"),
                                                 showOtherMonths: jQuery(this).data("showothermonths"),
                                                 dateFormat: jQuery(this).data("dateformat"),
-                                            })';
+                                            });';
+                            print '     jQuery(this).addClass("dated");';
                             print '     });';
+                          
                             print '}'; // end of diy_dated()
 
                             print 'diy_dated();';

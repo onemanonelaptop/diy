@@ -308,6 +308,24 @@ function testdiy_init() {
                             ) // end fields
                         ) // end array
                     );
+                    
+                     $this->field(
+                        array(
+                            "metabox" => "field-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "test-date-multi", // The form field name
+                            "title" => "Date", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "date",
+                                    "description" => "Date Description",
+                                    "numberofmonths" => "3",
+                                    "showothermonths" => "false",
+                                    "dateformat" => "dd/mm/yy"
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
                       
                     $this->field(
                         array(
