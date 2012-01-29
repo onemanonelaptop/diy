@@ -309,8 +309,9 @@ function testdiy_init() {
                         array(
                             "metabox" => "field-tests-multi", // the id of the metabox this field resides inside
                             "group" => "test-color-multi", // The form field name
-                            "title" => "Color", // Title used when prompting for input
+                            "title" => "Sortable Colors", // Title used when prompting for input
                             "max" => "5",
+                            "sortable" => true,
                             "fields" => array(
                                 "value" => array(
                                     "type" => "color",
@@ -519,8 +520,9 @@ function testdiy_init() {
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
                             "group" => "test-color-single", // The form field name
-                            "title" => "Color", // Title used when prompting for input
+                            "title" => "Colors", // Title used when prompting for input
                             "max" => "1",
+                           
                             "fields" => array(
                                 "value" => array(
                                     "type" => "color",
