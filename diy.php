@@ -1539,14 +1539,16 @@ function diy_init() {
                                     diy_picker();
                             });';
 
+                          
                             // When the upload button for attachment widget is pressed
-                            print 'jQuery(".attachment_upload").click(function() {
-                                    jQuery(".attachment").removeClass("active");
-                                    jQuery(this).parent().find(".attachment:first").addClass("active");
-                                    tb_show("","media-upload.php?post_id=0&TB_iframe=1");
-                                    return false;
-                            });';
-
+                            print '     jQuery("body").on("click",".attachment_upload",function() {
+                                            jQuery(".attachment").removeClass("active");
+                                            jQuery(this).parent().find(".attachment:first").addClass("active");
+                                            tb_show("","media-upload.php?post_id=0&TB_iframe=1");
+                                            return false;';
+                            print '     });';
+                           
+                             
                             // Duck punch the crap out of the send_to_editor function
                             print 'var _send_to_editor = window.send_to_editor;
                             window.send_to_editor = function (html) {
@@ -1577,17 +1579,20 @@ function diy_init() {
 
                             // Farbtastic it up for all .picker classes
                             print 'function diy_picker() {';
-                            print 'jQuery("input.picker:not(.picked)").each(function () {';
-
-                            print '		var saveid=jQuery(this);';
-                            print '		jQuery(this).next("div.picker").farbtastic(function (color) { saveid.val(color.toUpperCase()).prev(".swatch").css("background",color); }); ';
-                            print ' });';
+                            print '     jQuery("input.picker:not(.picked)").each(function () {';
+                            print '         var saveid=jQuery(this);';
+                            print '         jQuery(this).next("div.picker").farbtastic(function (color) { saveid.val(color.toUpperCase()).prev(".swatch").css("background",color); }); ';
+                            print '     });';
+                            
                             // Show and hide the picker 
-                            print 'jQuery("input.picker:not(.picked)").focus(function () {jQuery(this).next("div.picker").show();});
-                                jQuery("input.picker:not(.picked)").blur(function () {jQuery(this).next("div.picker").hide();});';
-                            print 'jQuery(this).addClass("picked");';
-                            print '}';
+                            print '     jQuery("input.picker:not(.picked)").focus(function () {jQuery(this).next("div.picker").show();});
+                                        jQuery("input.picker:not(.picked)").blur(function () {jQuery(this).next("div.picker").hide();});';
+                            
+                            // Add the picked class so we dont attach things twice
+                            print '     jQuery(this).addClass("picked");';
+                            print '}'; // end of diy_picker()
 
+                            // Enable all color pickers
                             print 'diy_picker();';
 
                             // Do the date picker using HTML5 data atrributes
