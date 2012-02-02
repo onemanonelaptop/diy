@@ -817,6 +817,19 @@ function diy_init() {
                     } // function
 
                     /**
+                    * If any placeholder text is specified then add the html attribute to the element
+                    *
+                    * @since	0.1
+                    * @param	string 	$p 	The text to use for the placeholder
+                    * @access	public
+                    * @return   void
+                    */
+                    function required($r) {
+                            return ( ($r) ? ' required ' : '');
+                    } // function
+                    
+                    
+                    /**
                     * Build a text input field widget
                     *
                     * @since	0.1
@@ -826,7 +839,7 @@ function diy_init() {
                     */
                     function text($args) {
                             // $args = $this->apply_name_fix($this->apply_default_args($args)) ;
-                            echo "<input class='field' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'/>" . $this->suffix($args['suffix']);					
+                            echo "<input class='field' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " " . $this->required($args['required']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'/>" . $this->suffix($args['suffix']);					
                             echo $this->description($args['description']);
                     } // function
 
@@ -1517,6 +1530,18 @@ function diy_init() {
                             width: 25px; float: left; height:25px;}';
                             print '.ui-icon-circle-triangle-e {background: transparent url(../../../wp-admin/images/arrows.png) no-repeat 6px -103px;
                             width: 25px; float: right; height:25px;}';
+                            
+                            // Form Validation Images from http://www.woothemes.com/2010/08/woocons1/
+                            print 'input:required:invalid, input:focus:invalid {
+                                    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUJCQTEwQjc0REU2MTFFMUI1RDg4RDkzRDI0MUNGOUQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUJCQTEwQjg0REU2MTFFMUI1RDg4RDkzRDI0MUNGOUQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBQkJBMTBCNTRERTYxMUUxQjVEODhEOTNEMjQxQ0Y5RCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBQkJBMTBCNjRERTYxMUUxQjVEODhEOTNEMjQxQ0Y5RCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pvox9icAAAJ9SURBVHjapFNNTBNREP7ebrv9sRRBEUqIweLJRhPUWE5q1JtBTYwXjdEDPaioPdmTXowHbmKtpoIxGr3pwbsHzp4UMPEiBEyNoFLo77bd3efMvrJy9yW772Vmvm++NzNPSCnxP8vHv99DAkwjbUDTxdXw8bO3RSQSgeM4bpSmabJaqdRm3j9yLPlC6IAg885vUhFgEyxFKnop/cw4cQZoNNja9lJ4IABfbPB56dWkz7HlFJN4ClwwCHz5Zt5IngSWFwFOrmkqqn02Rk6JqGPnS68fE0ZOeQSablyJXBjLG8NHBQpLKrHhB6p1pdUIKEXkMw4eEx2Wna+8nW6S56WbIrT/cCawL6nApgkkR4DTdA1dZ3Y6jypb3XRJAomkCCUOZTwFQoogVn8CrYaSHAoBu3qB0XOkhuT09gHFIlCrKn/TYmFBV71raDUd11mvAeUS8DQLzM8BsRjQ30/nWWVjH8dwbLPpeArQagGVMmDTbllA53YgHPrX7PA2skWBjQ1CEET3K4ynwGppqJZVBknEqWtAfC8w91l98SGy3aBu2CqmWlEYr41mXV3BtpSSmQ/AgWFg4r7qwp27wOwnmrhfgJ+zW5CNuqPqR0Vai2vXO3Yncv7ePURCWRrt9rFUXkzMxQyG3K60VpZQWf4y3rVg5VwFnUI+0b7P+2A3J9E1oIJ5eDbfCZ8FKW5QG9d/wFf4mo5K5DwFmW7hDs8RA+Pn44NZRPvU+G4dZV6lFbxbXLj10USWTRNFqQiEEOrJANGH3bh3caAnZWt+Zm0jhfTRK3pTWJ1O/8ED0rPOpXexWwj4x8Oh9QA7TNUhvW23yWFTCdf4QvSZvDP2rwADANhwFarl2kEzAAAAAElFTkSuQmCC");
+                                    background-position: right 5px;
+                                    background-repeat: no-repeat;
+                                   }
+                                   input:required:valid {
+                                    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUQ0NUM1Rjg0REU1MTFFMTk2MzZBNTREMjg1MjA3NzIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUQ0NUM1Rjk0REU1MTFFMTk2MzZBNTREMjg1MjA3NzIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBRDQ1QzVGNjRERTUxMUUxOTYzNkE1NEQyODUyMDc3MiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBRDQ1QzVGNzRERTUxMUUxOTYzNkE1NEQyODUyMDc3MiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PvaZ3uIAAALlSURBVHjapFNNSBRhGH5md3bH9W/SFX92xUqxpcg/NA9a/hRGEJH9QIeICMFTBy/dAhG6denQKbKI6BDhrcgM2w7dRMkfEhNXV911/2d2dtfZ3ZnZ6ftGHaJrH7zfwPM+z8P7PczL6LqO/zksve5OMIAVUCyArqG+hq+/19Z06UplebWH9hNSZG3RN/slnNx9y1iwYysQUAPejesHBvSoBLDbuAe3+x89vthxq7G82EbQ3GGXq5HksT7vwtTIhx9PnyhK7jX79wQF4shxxSMPh5+97PZ0IZVbQTwjQdMVg2S12MCxPK733mysq2p49XxqzKLk9idpz0IvxYa64b7RiU5PM0IpL4RsAFJeQCovIa2kkZDD2Ir+xK74GV0eDyiXakwDN18/0tPS6w6l5ohQIgYxJPNJpJQUwulthBMRVBb1ICpI8Me/obf1vJtqTIPTJ9uvMWwcYlZAQNhCKCpgL7mDoORHLCGgxTUAl7MEfJGL4AEwbMLQmAZ2TmtMKwkExQBKmVr0Nd+AQ6uCJMi40HQVfEkG/sg0FkLT0Kw28rSooTFDlOm4+RREOYMSRwIObhX9p9qRVztIuBLWg8uY3VyAs+I49lUFUlYyNKZBTAz7hHSoSrVmMReZRyYfxNCZTiK2Y2V7FTMbiyjjq0igElQ9BzujGhrTYHcv8EmUQt2qRYPVXob5WAD7izLqSssws/kL5XwNlIKOrJYDS/4kUQobGjODlJydXPOtB3iOI0SVmDiwJMbw0bcKrtRJsAKZKgeVfCmHcqnGNCiyI/DbvzG+F/fDTdJmCWqxcrA5eGQVBbKSB2tljB7lUC7VUC1Dl6l1kAGZEM4GjF6+c2K8uaXBlVetJMSDRbOzDCkN68vbwZn3WxPxbbywkPVZ8uoHBgzDmNt1zIWhswO2+22DFeec1SW1FItHMqFFrzC38l15Iwbx9YhraP8xYA6DLSJVSR7oMNACZLqUpLJ076j2yOCPAAMAeINpp0KtkLIAAAAASUVORK5CYII=");
+                                    background-position: right 5px;
+                                    background-repeat: no-repeat;
+                                   }';
 
                     } // end function
 

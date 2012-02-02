@@ -25,7 +25,13 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+// Check if the DIY framework plugin is installed and prompt if necessary
+if (!in_array( 'diy/diy.php', (array) get_option( 'active_plugins', array() )) ) {      
+        add_action('admin_notices', create_function('','echo "<div class=\"updated\"><p>This plugin requires the <em>Diy Plugin Framework</em> to operate, <a href=\"http://wordpress.org/extend/plugins/diy/\">install it now?</a></p></div>"; ')); 
+} // end if
+
 add_action( 'diy_init', 'testdiy_init' );
+
 /**
  * Define the entire functionality inside the diy_init action which only called
  * if the diy plugin is present and activated.
@@ -105,6 +111,8 @@ function testdiy_init() {
                                 "value" => array(
                                     "type" => "text",
                                     "description" => "Text Description",
+                                     "required" => true,
+                                     "placeholder" => 'This is a required field with a placeholder',
                                 )
                             ) // end fields
                         ) // end array
