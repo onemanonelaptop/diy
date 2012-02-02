@@ -1164,19 +1164,21 @@ function diy_init() {
                             if (!is_array($args)) {$args = array();}
 
                             foreach( $args as $field_group => $group) {
-                                    echo "<table class='form-table'><tr><th scope='row'><strong>" . $group['title'] . "</strong></th><td>";		
-
+                                    if ($group['style'] == "block") {
+                                        echo "<div class='form-div'>";		
+                                    } else {
+                                         echo "<table class='form-table'><tr><th scope='row'><strong>" . $group['title'] . "</strong></th><td>";		 
+                                    }
                                     // Load up the current value
                                     $group_values = get_post_meta($post->ID, $group['group'], true);
 
                                     $this->print_field_group($group,$group_values);
-                                    // if we have a repeatble group then add a button
-
-                                    // call the function named in the type field
-                                    // $this->{$meta_box['type']}($args);
-
-
-                                    echo "</td></tr></table>";
+                      
+                                    if ($group['style'] == "block") {
+                                        echo "</div>";
+                                    } else {
+                                       echo "</td></tr></table>"; 
+                                    }
 
 
                             } // end for

@@ -537,6 +537,7 @@ function testdiy_init() {
                             "group" => "test-textarea-single", // The form field name
                             "title" => "Textarea", // Title used when prompting for input
                             "max" => "1",
+                            "style" => "block",
                             "fields" => array(
                                 "value" => array(
                                     "type" => "textarea",
