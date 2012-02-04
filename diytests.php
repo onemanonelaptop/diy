@@ -100,23 +100,23 @@ function testdiy_init() {
                         ) // end array
                     );
                     
-                    // Text field test
-                    $this->field(
-                        array(
-                            "metabox" => "field-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-text-single", // The form field name
-                            "title" => "Text", // Title used when prompting for input
-                            "max" => "1",
-                            "fields" => array(
-                                "value" => array(
-                                    "type" => "text",
-                                    "description" => "Text Description",
-                                     "required" => true,
-                                     "placeholder" => 'This is a required field with a placeholder',
-                                )
-                            ) // end fields
-                        ) // end array
-                    );
+// Text field test
+$this->field(
+    array(
+        "metabox" => "field-tests-single", // the id of the metabox this field resides inside
+        "group" => "test-text-single", // The form field name
+        "title" => "Text", // Title used when prompting for input
+        "max" => "1",
+        "fields" => array(
+            "value" => array(
+                "type" => "text",
+                "description" => "Text Description",
+                    "required" => true,
+                    "placeholder" => 'This is a required field with a placeholder',
+            )
+        ) // end fields
+    ) // end array
+);
                     
                     // Textarea field test
                     $this->field(
@@ -145,6 +145,23 @@ function testdiy_init() {
                                 "value" => array(
                                     "type" => "select",
                                     "description" => "Select Description",
+                                    "selections" => array("0"=>"0","1"=>"1","2"=>"2")
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                     // Select box multiple field test
+                    $this->field(
+                        array(
+                            "metabox" => "field-tests-single", // the id of the metabox this field resides inside
+                            "group" => "test-radio-single", // The form field name
+                            "title" => "Radio", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "radio",
+                                    "description" => "Multi Radio Description",
                                     "selections" => array("0"=>"0","1"=>"1","2"=>"2")
                                 )
                             ) // end fields
@@ -398,6 +415,23 @@ function testdiy_init() {
                         ) // end array
                     );
                     
+                     // Select box multiple field test
+                    $this->field(
+                        array(
+                            "metabox" => "field-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "test-radio-multi", // The form field name
+                            "title" => "Radio", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "radio",
+                                    "description" => "Multi Radio Description",
+                                    "selections" => array("0"=>"0","1"=>"1","2"=>"2")
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
                     // Date multiple field test
                      $this->field(
                         array(
@@ -493,13 +527,7 @@ function testdiy_init() {
                             )
                     ); 
                     
-                    $this->metabox(
-                            array( 
-                                'id' => 'field-post-tests-multi',
-                                'title' => 'Field Post Tests (Multi)',
-                                'post_type' => array('post','page')
-                            )
-                    ); 
+                 
                         
                     $this->field(
                         array(

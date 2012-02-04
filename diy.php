@@ -41,7 +41,7 @@ function diy_init() {
             /**
             * The Abstract Diy Class
             *   
-            * @since	0.1
+            * @since	0.0.1
             * @access	public
             */
             class Diy {
@@ -99,7 +99,7 @@ function diy_init() {
                     /**
                     * @var array Set to true to remove sidebar metaboxes on the options page
                     */
-                    protected $is_generic = false;
+                    protected $generic = false;
 
                     /**
                     * @var  string    The server path and filename of the child plugin
@@ -131,10 +131,78 @@ function diy_init() {
                     */
                     protected $diy_url = '';
                     
+                    /**
+                    * @var  string    The plugin page
+                    */
+                    protected $page = '';
+                    
+                    /**
+                    * @var  array    metaboxes
+                    */
+                    protected $metaboxes = array();
+                    
+                    /**
+                    * @var  array    fields
+                    */
+                    protected $fields = array();
+                    
+                    /**
+                    * @var  array    version
+                    */
+                    protected $version = '0.0.1';
+                    
+                     /**
+                    * @var  array    icon file
+                    */
+                    protected $icon = '';
+                    
+                    /**
+                    * @var array The options page defaults
+                    */
+                    protected $metabox_defaults = array (
+                        "context" => "normal",
+                        "post_callback" => "post_metabox_builder",
+                        "option_callback" => "diy_option_field_builder",
+                        "description" => "",
+                        "footer" => "",
+                        "sortable" => false
+                    );
+                    
+                    /**
+                    * @var array The individual field defaults
+                    */
+                    protected $field_defaults = array (
+                        "tooltip" => "",
+                        "label_width" => "",
+                        "label_style" => "",
+                        "title" => "",
+                        "description" => "",
+                        "width" => "",
+                        "height" => "",
+                        "multiple" => "",
+                        "suffix" => "",
+                        "prefix"=>"",
+                        "function"=>"",
+                        "placeholder"=>"",
+                        "required"=>"",
+                        "preview" => false,
+                        "map" => "",
+                        "default" => "",
+                        
+                    );
+                    
+                    /**
+                    * @var array The field group defaults
+                    */
+                    protected $field_group_defaults = array (
+                        "description" => "",
+                        "sortable" => false,
+                        "style" => "",
+                    );
                     
                     /**
                     * This starts the process of defining the plugin
-                    * @return void
+                    * @return void 
                     */
                     public function diy_start() {
 
@@ -176,37 +244,39 @@ function diy_init() {
 
                         // Add the plugins options page	unless the Diy Class is being used just for metaboxes		
                         if ($this->usage != 'meta') {
-                                // Add the plugins options page
-                                add_action( 'admin_menu', array($this,'diy_add_options_page') );
+                            // Add the plugins options page
+                            add_action( 'admin_menu', array($this,'diy_add_options_page') );
                         }
                         
                         // Force the plugin options page to have two columns
                         add_filter('screen_layout_columns', array(&$this, 'diy_options_page_columns'), 10, 2);
 
-                        // Add the predefined metaboxes to the plugin options page as long as is_generic isnt true
-                        if ($this->is_generic == false) {
-                                add_action('admin_init', array(&$this,'diy_add_predefined_metaboxes') ); 
+                        // Add the predefined metaboxes to the plugin options page as long as generic isnt true
+                        if ($this->generic == false) {
+                            add_action('admin_init', array(&$this,'diy_add_predefined_metaboxes') ); 
                         }
 
                         // Setup the ajax callback for autocomplete widget
                         add_action('wp_ajax_suggest_action', array(&$this,'diy_suggest_posts_callback'));	
-                        // add_action('wp_ajax_suggest_action', array(&$this,'diy_suggest_users_callback'));	
+                        // add_action('wp_ajax_suggest_action', array(&$this,'diy_suggest_users_callback'));
+                        add_filter( 'posts_where', array(&$this,'diy_modify_posts_where'), 10, 2 );
 
                         // Setup some query vars to serve javascript and css via a url
                         add_action( 'template_redirect', array( &$this, 'diy_script_server' ));
                         add_filter( 'query_vars', array( &$this, 'diy_query_vars' ));
                                          
+                        
                     } // end function 
                     
                     
-                     /**
+                    /**
                     * Return a link to the admin icon
                     * @param string $hook Current page hook
                     * @return string
                     */
                     function diy_settings_page_icon( $hook ) {
 			if ($hook == $this->hook) 
-				return plugin_dir_url( __FILE__ ).$this->icon;
+                            return plugin_dir_url( __FILE__ ).$this->icon;
 			return $hook;
                     }
 		
@@ -239,6 +309,7 @@ function diy_init() {
                                     $this->meta[ $type ][ $field['metabox'] ][ $field['group'] ] = $field;
                                 }
                             } else {  
+                                // otherwise add the fields to a settings page
                                 add_settings_field(
                                     $field['group'],  // option identifier
                                     $field['title'], // field title
@@ -250,8 +321,7 @@ function diy_init() {
 
                                 register_setting( $this->options_group, $field['group'], array(&$this,'diy_validate_settings'));
 
-                                $this->options_meta[ $field['metabox'] ][ $field['group'] ] = $args;
-
+                             
                                 // check if this option has previously been created if not apply the defaults
                                 if (! get_option( $field['group'] ) ) {
                                     foreach ($field['fields'] as $key => $values) {
@@ -286,12 +356,9 @@ function diy_init() {
                     * @return   array   An array of post_types  
                     */
                     function diy_get_metabox_post_types($id) {
-                        if (!is_array($this->metaboxes)) {
-                            return '';
-                        }
                         foreach ($this->metaboxes as $metabox) {
                             if ($metabox['id'] == $id) {
-                                return $metabox['post_type'];
+                                return (isset($metabox['post_type']) ? $metabox['post_type'] : '' );
                             }
                         }
                         return '';
@@ -303,12 +370,8 @@ function diy_init() {
                     * @return   void   
                     */
                     function diy_metaboxes() {
-                        if (!is_array($this->metaboxes)) {
-                            return;
-                        }
                         foreach ($this->metaboxes as $metabox) {
-
-                            if ($metabox['post_type'] != '') {
+                            if (isset($metabox['post_type'])) {
                                 // If a post type is set then add the metabox to the post type
                                 if (!is_array($metabox['post_type'])) {
                                     $metabox['post_type'] = array($metabox['post_type']);
@@ -317,32 +380,32 @@ function diy_init() {
                                 foreach ($metabox['post_type'] as $metabox_post_type) {
 
                                     add_meta_box( 
-                                                $metabox['id'], 
-                                                $metabox['title'],  
-                                                array(&$this,'post_metabox_builder'), 
-                                                $metabox_post_type, 
-                                                'normal', 
-                                                'high', 
-                                                $this->meta[$metabox_post_type][$metabox['id']] 
+                                        $metabox['id'], 
+                                        $metabox['title'],  
+                                        array(&$this,$metabox['post_callback']), 
+                                        $metabox_post_type, 
+                                        $metabox['context'], 
+                                        'core', 
+                                        $this->meta[$metabox_post_type][$metabox['id']] 
                                     );
                                 }     
                             } else { 
                                     // otherwise add this metabox to an options page.
 
                                     add_settings_section(
-                                            $metabox['id'], 
-                                            '', 
-                                            array(&$this, 'section_null'), 
-                                            $this->page 
+                                        $metabox['id'], 
+                                        '', 
+                                        array(&$this, 'section_null'), 
+                                        $this->page 
                                     );
                                     add_meta_box(
-                                            $metabox['id'],
-                                            $metabox['title'], 
-                                            array(&$this, 'diy_option_field_builder'), 
-                                            $this->page, 
-                                            'normal', 
-                                            'core',
-                                            array('section' => $metabox['id'],'description'=>$metabox['description'])
+                                        $metabox['id'],
+                                        $metabox['title'], 
+                                        array(&$this, $metabox['option_callback']), 
+                                        $this->page, 
+                                        $metabox['context'], 
+                                        'core',
+                                        array('section' => $metabox['id'],'description'=>$metabox['description'],'footer'=>$metabox['footer'])
                                     );
 
                             } // end if
@@ -352,7 +415,7 @@ function diy_init() {
                     /**
                     * Vogon constructor
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param 	string  $file 	Contains __FILE__ for the file extending this class
                     * @access	public
                     * @return   void
@@ -378,92 +441,66 @@ function diy_init() {
                     /**
                     *  Serve the CSS or JS when requested via a URL
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
                     public function diy_script_server() {
-                            // Check that the query var is set and is the correct value.
-                            if (get_query_var( 'diy' ) == 'css') {
-                                    // Send the headers for a CSS file
-                                    header("Content-type: text/css");
-                                    // output css 
-                                    print $this->diy_css();
-                                    exit;
-                            }
+                        // Check that the query var is set and is the correct value.
+                        if (get_query_var( 'diy' ) == 'css') {
+                            header("Content-type: text/css"); // Send the headers for a CSS file
+                            print $this->diy_css(); // output the css 
+                            exit;
+                        }
 
-                            // Check that the query var is set and is the correct value.
-                            if (get_query_var( 'diy' ) == 'js') {
-                                    // Send the headers for a javascript file
-                                    header("Content-type: application/x-javascript");
-                                    // output js 
-                                    print $this->diy_js();
-                                    exit;
-                            }
+                        // Check that the query var is set and is the correct value.
+                        if (get_query_var( 'diy' ) == 'js') {
+                            header("Content-type: application/x-javascript"); // Send the headers for a javascript file
+                            print $this->diy_js(); // output js
+                            exit;
+                        }
                     } // function 
 
 
                     /**
                     *  Setup the query variable used to serve js and css data
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	array   $public_query_vars	An array of the currently registered query var names
                     * @return	array   Query var names array
                     * @access	public
                     */
                     public function diy_query_vars($public_query_vars) {
-                            $public_query_vars[] = 'diy';
-                            return $public_query_vars;
+                        $public_query_vars[] = 'diy';
+                        return $public_query_vars;
                     } // function
 
-                    /**
-                    * When the plugin is activated update the settings
-                    *
-                    * @since	0.1
-                    * @access	public
-                    * @todo		not currently called anywhere
-                    * @return   void
-                    */
-                    public function diy_activate() {
-                            update_option( $this->options_name, $this->options);
-                    } // function
-
-                    /**
-                    * When the plugin is deactivated update the settings
-                    *
-                    * @since	0.1
-                    * @access	public
-                    * @return   void
-                    */
-                    public function plugin_deactivate() {
-
-                    } // function
-
+                   
                     /**
                     * Create the Options page for the plugin
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
                     public function diy_add_options_page() {
-                            // Add a theme page or an option page depending on the diy usage
-                            if ($this->usage == 'theme') {
-                                    $this->page = add_theme_page( __($this->settings_page_title), __($this->settings_page_link), 'edit_theme_options', $this->slug, array(&$this,'diy_render_options_page' ));
-                                    add_action('load-'.$this->page,  array(&$this, 'diy_loading_options_page'));	
-                            } else if ($this->usage == 'plugin') {
-                                    $this->page = add_options_page(__($this->settings_page_title), __($this->settings_page_link), 'manage_options', $this->slug, array($this, 'diy_render_options_page'));
-                                    add_filter( 'plugin_action_links', array(&$this, 'diy_add_settings_link'), 10, 2 );
+                        // Add a theme page or an option page depending on the diy usage
+                        if ($this->usage == 'theme') {
+                            $this->page = add_theme_page( __($this->settings_page_title), __($this->settings_page_link), 'edit_theme_options', $this->slug, array(&$this,'diy_render_options_page' ));
+                            add_action('load-'.$this->page,  array(&$this, 'diy_loading_options_page'));	
+                        } else if ($this->usage == 'plugin') {
+                            $this->page = add_options_page(__($this->settings_page_title), __($this->settings_page_link), 'manage_options', $this->slug, array($this, 'diy_render_options_page'));
+                            add_filter( 'plugin_action_links', array(&$this, 'diy_add_settings_link'), 10, 2 );
 
-                                    // Run stuff as and when this options page loads
-                                    add_action('load-'.$this->page,  array(&$this, 'diy_loading_options_page'));
-                            }
+                            // Run stuff as and when this options page loads
+                            add_action('load-'.$this->page,  array(&$this, 'diy_loading_options_page'));
+                        }
                     } // function
 
                     /**
                     * Runs only on the plugin page load hook, enables the scripts needed for metaboxes
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
@@ -476,7 +513,7 @@ function diy_init() {
                     /**
                     * Add a settings link to the plugin list page
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	string  $file       the filename of the plugin currently being rendered on the installed plugins page
                     * @param	array   $links      an array of the current registered links in html format
                     * @return	array
@@ -496,7 +533,7 @@ function diy_init() {
                     /**
                     * On the plugin page make sure there are two columns
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param   int $columns
                     * @param   string  $screen
@@ -513,7 +550,7 @@ function diy_init() {
                     /**
                     * Create the options page form
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
@@ -563,7 +600,7 @@ function diy_init() {
                     /**
                     * Register some default metaboxes on the plugins options page
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @todo 	This function should use optbox() to define its metaboxes
                     * @return   void
@@ -590,7 +627,7 @@ function diy_init() {
                     /**
                     * Meta box for the documention link and the debugging popup 
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
@@ -622,7 +659,7 @@ function diy_init() {
                     /**
                     * Meta box for the bug reporting info
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
@@ -635,7 +672,7 @@ function diy_init() {
                     /**
                     * Meta box for displaying social media links
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
@@ -650,7 +687,7 @@ function diy_init() {
                     /**
                     * Meta box for displaying plugin rating links
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
@@ -665,7 +702,7 @@ function diy_init() {
                     /**
                     * Register the admin scripts
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
@@ -695,232 +732,270 @@ function diy_init() {
                     /**
                     * Add custom styles to this plugins options page only
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
                     function diy_admin_styles() {
 
-                            // used by media upload
-                            wp_enqueue_style('thickbox');
-                            // Enqueue our diy specific css
-                            wp_enqueue_style('diy');
-                            // color picker
-                            wp_enqueue_style( 'farbtastic' );
+                        // used by media upload
+                        wp_enqueue_style('thickbox');
+                        // Enqueue our diy specific css
+                        wp_enqueue_style('diy');
+                        // color picker
+                        wp_enqueue_style( 'farbtastic' );
                     } // function
 
 
                     /**
                     * Add scripts globally to all post.php and post-new.php admin screens
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */
                     function diy_admin_scripts() {
-                            // Enqueue our diy specific javascript
-                            wp_enqueue_script('diy');
+                        // Enqueue our diy specific javascript
+                        wp_enqueue_script('diy');
 
-                            // Color picker
-                            wp_enqueue_script('farbtastic');  
+                        // Color picker
+                        wp_enqueue_script('farbtastic');  
 
-                            // Allow Jquery Chosen
-                            wp_enqueue_script('suggest');
+                        // Allow Jquery Chosen
+                        wp_enqueue_script('suggest');
 
-                            // Allow usage of the google map api
-                            wp_enqueue_script('gmap');
+                        // Allow usage of the google map api
+                        wp_enqueue_script('gmap');
                     }
 
                     /**
-                    * Define a metabox field and add it to a metabox 
+                    * Define a metabox field, apply the defaults add it to the fields array 
                     *
                     * @param	mixed $args	array that contains the metabox field definition
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */	
-                    function field($args) {
-                        $this->fields[] = $args;
+                    function field($group) {
+                        // go through each defined field in the group and apply the defaults
+                        foreach ($group['fields'] as $field_name => $field_definition) {
+                            $group['fields'][$field_name] =  wp_parse_args($group['fields'][$field_name], $this->field_defaults );
+                        }
+                        
+                        // Apply the field group defaults and store in the fields array
+                        $this->fields[] =  wp_parse_args($group, $this->field_group_defaults );
                     } // end function
 
 
                     /**
-                    * Add a meta box to a post type or an options page.
+                    * Define a meta box for  a post type or an options page and apply the defaults
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array   $args
                     * @return   void
                     */	
                     function metabox( $args) {
-                        $this->metaboxes[] = $args;
+                        $this->metaboxes[] = wp_parse_args( $args, $this->metabox_defaults );
                     } // end function
 
                     /**
                     *  If a height is specified return the inline style to set it
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    string  $height  the height in pixels
                     * @return   string  
                     */
                     function height($height) {
-                            return ((!empty($height)) ? ' height:'. $height . 'px;' : '');
+                        return ((!empty($height)) ? ' height:'. $height . 'px;' : '');
                     } // function
 
                     /**
                     * If a width is specified return the inline style to set it
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    string  $width  The width in pixels
                     * @return   string 
                     */
                     function width($width) {
-                            return  ((!empty($width)) ? ' width:'. $width . 'px;' : '');
+                        return  ((!empty($width)) ? ' width:'. $width . 'px;' : '');
                     } // function
 
                     /**
                     * If a description is given then return the html to display it
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	string $d	The text to show for the description
                     * @access	public
                     * @return   void
                     */
                     function description($d) {
-                            return ( (!empty($d)) ? '<br />' . '<span class="description">'.$d. '</span>' : '');
+                        return ( (!empty($d)) ? '<br />' . '<span class="description">'.$d. '</span>' : '');
                     } // function
 
                     /**
                     * If any placeholder text is specified then add the html attribute to the element
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	string 	$p 	The text to use for the placeholder
                     * @access	public
                     * @return   void
                     */
                     function placeholder($p) {
-                            return ( (!empty($p)) ? 'placeholder="' . $p . '"' : '');
+                        return ( (!empty($p)) ? 'placeholder="' . $p . '"' : '');
                     } // function
 
                     /**
                     * If any suffix text is specified then add the html right after the field
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	string 	$s 	The text to use for the suffix
                     * @access	public
                     * @return   void
                     */
                     function suffix($s) {
-                            return ( (!empty($s)) ? '<span class="field-suffix">' . $s . '</span>' : '');
+                        return ( (!empty($s)) ? '<span class="field-suffix">' . $s . '</span>' : '');
                     } // function
 
+                     /**
+                    * If any prefix text is specified then add the html right after the field
+                    *
+                    * @since	0.0.1
+                    * @param	string 	$p 	The text to use for the prefix
+                    * @access	public
+                    * @return   void
+                    */
+                    function prefix($p) {
+                        return ( (!empty($p)) ? '<span class="field-prefix">' . $p . '</span>' : '');
+                    } // function
+                    
+                    
                     /**
                     * If any placeholder text is specified then add the html attribute to the element
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	string 	$p 	The text to use for the placeholder
                     * @access	public
                     * @return   void
                     */
                     function required($r) {
-                            return ( ($r) ? ' required ' : '');
+                        return ( ($r) ? ' required ' : '');
                     } // function
                     
                     
                     /**
                     * Build a text input field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	array 	$args 	The width, name, value, placeholder and description of the text field
                     * @access	public
                     * @return   void
                     */
                     function text($args) {
-                            // $args = $this->apply_name_fix($this->apply_default_args($args)) ;
-                            echo "<input class='field' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " " . $this->required($args['required']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'/>" . $this->suffix($args['suffix']);					
-                            echo $this->description($args['description']);
+                        // $args = $this->apply_name_fix($this->apply_default_args($args)) ;
+                        echo "<input class='field' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " " . $this->required($args['required']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'/>" . $this->suffix($args['suffix']);					
+                        echo $this->description($args['description']);
                     } // function
 
                     /**
                     * Build a datepicker field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	array 	$args 	The width, name, value, placeholder and description of the date field
                     * @access	public
                     * @return   void
                     */
                     function date($args) {
-                            if (!isset($args['showothermonths'])) { $args['showothermonths'] = 'false'; }
-                            if (!isset($args['dateformat'])) { $args['dateformat'] = 'mm/dd/yy'; }
-                            if (!isset($args['numberofmonths'])) { $args['numberofmonths'] = '2'; }
-                            // Apply the default date parameters in case they are not set
-                            echo "<input class='field datepicker' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'" .
-                                   "data-showothermonths='" . $args['showothermonths']. "' data-dateformat='" . $args['dateformat']. "' data-numberofmonths='" . $args['numberofmonths']. "'" . "/>";					
-                            echo $this->description($args['description']);
+                        if (!isset($args['showothermonths'])) { $args['showothermonths'] = 'false'; }
+                        if (!isset($args['dateformat'])) { $args['dateformat'] = 'mm/dd/yy'; }
+                        if (!isset($args['numberofmonths'])) { $args['numberofmonths'] = '2'; }
+                        // Apply the default date parameters in case they are not set
+                        echo "<input class='field datepicker' type='text' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $args['value']  . "'" .
+                                "data-showothermonths='" . $args['showothermonths']. "' data-dateformat='" . $args['dateformat']. "' data-numberofmonths='" . $args['numberofmonths']. "'" . "/>";					
+                        echo $this->description($args['description']);
                     } // function
 
 
                     /**
                     * Build a textarea field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	array 	$args 	The width, name, value, placeholder and description of the textarea field
                     * @access	public
                     * @return   void
                     */
                     function textarea($args) {
-                            echo "<textarea class='field' data-tooltip='" .$args['tooltip']  . "' name='" . $args['name']  . "' style='" . $this->width($args['width']) . " " .  $this->height($args['height']) . "' rows='7' cols='50' type='textarea'>" . $args['value'] . "</textarea>";			
-                            echo $this->description($args['description']);
+                        echo "<textarea class='field' data-tooltip='" .$args['tooltip']  . "' name='" . $args['name']  . "' style='" . $this->width($args['width']) . " " .  $this->height($args['height']) . "' rows='7' cols='50' type='textarea'>" . $args['value'] . "</textarea>";			
+                        echo $this->description($args['description']);
                     } // function
 
                     /**
                     * Build a checkbox field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	array 	$args 	The width, name, value, placeholder and description of the checkbox field
                     * @access	public
                     * @return   void
                     */ 
                     function checkbox($args) {
-                            echo "<input  class='field' name='" . $args['name'] . "' type='checkbox' value='1' ";
-                            checked('1', $args['value']); 
-                            echo " /> <span  class='description'>" . $args['description'] . "</span>" ;
+                        echo "<input  class='field' name='" . $args['name'] . "' type='checkbox' value='1' ";
+                        checked('1', $args['value']); 
+                        echo " /> <span  class='description'>" . $args['description'] . "</span>" ;
 
                     } // function
 
 
                     /**
+                    * Build a radio field widget
+                    *
+                    * @since	0.0.1
+                    * @param	array 	$args 	The width, name, value, placeholder and description of the text field
+                    * @return   void
+                    * @access	public
+                    */ 
+                    function radio($args)  {
+                        echo "<ul>";
+                        foreach ($args['selections'] as $key => $value) {
+                                echo "<li><input class='field' type='radio' name='" . $args['name'] . "' " . checked( $args['value'],  $key, false ) . " value='" . $key . "' />" . $value . "</li>";	
+                        }	
+                        echo "</ul>";
+
+                        echo $this->description($args['description']);
+                    } // function
+                    
+                    
+                    /**
                     * Build a selectbox field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param	array 	$args 	The width, name, value, placeholder and description of the text field
                     * @return   void
                     * @access	public
                     */ 
                     function select($args)  {
 
-                            if ($args['multiple']) {
-                                    echo "<select class='optselect field'  multiple='true' style='" .$this->width($args['width'])  . "' name='" . $args['name'] . "" . "[]'>";
-                                    foreach ($args['selections'] as $key => $value) {
-                                            echo "<option " . (array_search($value , $args['value']) === false ? '' : 'selected' ). " value='" . $key . "'>" . $value . "</option>";	
-                                    }	
-                                    echo "</select>";
-                            } else {
-                                    echo "<select  class='optselect field'  style='" .$this->width($args['width'])  . "' name='" . $args['name'] . "'>";
-                                    foreach ($args['selections'] as $key => $value) {
-                                            echo "<option " . ($args['value'] == $key ? 'selected' : '' ). " value='" . $key . "'>" . $value . "</option>";	
-                                    }	
-                                    echo "</select>";
-                            }
-                            echo $this->description($args['description']);
+                        if ($args['multiple']) {
+                                echo "<select class='optselect field'  multiple='true' style='" .$this->width($args['width'])  . "' name='" . $args['name'] . "" . "[]'>";
+                                foreach ($args['selections'] as $key => $value) {
+                                        echo "<option " . (array_search($value , $args['value']) === false ? '' : 'selected' ). " value='" . $key . "'>" . $value . "</option>";	
+                                }	
+                                echo "</select>";
+                        } else {
+                                echo "<select  class='optselect field'  style='" .$this->width($args['width'])  . "' name='" . $args['name'] . "'>";
+                                foreach ($args['selections'] as $key => $value) {
+                                        echo "<option " . ($args['value'] == $key ? 'selected' : '' ). " value='" . $key . "'>" . $value . "</option>";	
+                                }	
+                                echo "</select>";
+                        }
+                        echo $this->description($args['description']);
                     } // function
 
                     /**
                     * Render a google map
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array   $args
                     * @return   void
@@ -928,14 +1003,14 @@ function diy_init() {
                     function map ($args) {
                             global $post;
                             // build the html map element
-                            echo '<div id="map-' . $args['name'] . '" class="gmap field" data-zoom="5" data-lat="" data-long="" data-latfield="' . $args['latfield'] . '" data-longfield="' . $args['longfield'] . '" style="' .$this->height($args['height'])  . '" ></div>';
+                            echo '<input type="hidden" name="' . $args['name'] . '" value="1" /><div id="map-' . $args['name'] . '" class="gmap field" data-zoom="5" data-lat="" data-long="" data-latfield="' . $args['latfield'] . '" data-longfield="' . $args['longfield'] . '" style="' .$this->height($args['height'])  . '" ></div>';
                     } // end function map
 
 
                     /**
                     * Render a color picker field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param    array   $args
                     * @access	public
                     * @return   void
@@ -951,7 +1026,7 @@ function diy_init() {
                     /**
                     * Retrieve the ID number of an image/file asset
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    string  $image_src
                     * @return   int 
@@ -963,11 +1038,10 @@ function diy_init() {
                             return $id;
                     }
 
-
                     /**
                     * Render an attachment field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param    array   $args
                     * @access	public
                     * @return   void
@@ -978,15 +1052,16 @@ function diy_init() {
                             echo "<input class='attachment_upload button-secondary' id='" . $args['id'] . "-upload' type='button' value='Upload'/>";
 
                             // show a preview
-                            $this->attachment_preview($args['value']);
+                            if ($args['preview']) {
+                                $this->attachment_preview($args['value']);
+                            }
                             echo $this->description($args['description']);	
                     } // function
-
 
                     /**
                     * Generate or display a thumbnail of the chosen file, needs a good cleanup
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @param   string  $original
                     * @access	public
                     * @return   void
@@ -1016,11 +1091,10 @@ function diy_init() {
                         }
                     } // end function
 
-
                     /**
                     * Given a file return it as a url
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    string  $file   a filename
                     * @return   string  a url path to a filename
@@ -1032,7 +1106,7 @@ function diy_init() {
                     /**
                     * Render a suggest posts field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array  $args  field arguments
                     * @return   void
@@ -1045,7 +1119,7 @@ function diy_init() {
                     /**
                     * Render a suggest user field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array  $args  field arguments
                     * @return   void
@@ -1058,7 +1132,7 @@ function diy_init() {
                     /**
                     * Render a suggest users field widget
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array  $args  field arguments
                     * @return   void
@@ -1071,7 +1145,7 @@ function diy_init() {
                     /**
                     * Given an id show it along with the title in the autocmoplete textbox
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @see 		suggest
                     * @param    string  $id   
                     * @return   string
@@ -1085,7 +1159,7 @@ function diy_init() {
                     /**
                     * Given an id show it along with the title in the autocmoplete textbox e.g. Title [# 101]
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    string  $id     A post_id
                     * @return   string
@@ -1101,26 +1175,52 @@ function diy_init() {
                     /**
                     * Ajax callback function to return list of post types
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */ 
                     function diy_suggest_posts_callback() {
-                            global $wpdb, $post;
+                        global $wpdb;
 
-                            $posttype =  $wpdb->escape($_GET['type']);
-                            $in =  $wpdb->escape($_GET['q']);
+                        $posttype =  $wpdb->escape($_GET['type']);
+                        $in =  $wpdb->escape($_GET['q']);
 
-                            $query = "SELECT ID from $wpdb->posts where post_type = '$posttype' AND post_title like '%$in%' ";
-                            $mypostids = $wpdb->get_col($query);
+                        $query = "SELECT ID from $wpdb->posts where post_type = '$posttype' AND post_title like '%$in%' ";
+                        $mypostids = $wpdb->get_col($query);
 
-                            foreach ($mypostids as $key => $value) {
-                                    print get_the_title($value) . " [#" .  $value . "]" . "\n";
-                            }
-                            die(); // this is required to return a proper result
+                        foreach ($mypostids as $key => $value) {
+                                print get_the_title($value) . " [#" .  $value . "]" . "\n";
+                        }
+                        
+                        
+                        $args = array(
+                            'post_title_like' => $in,
+                            'post_type' => $posttype,
+                        );
+                        $res = new WP_Query($args);
+                        
+                        
+                        die(); // this is required to return a proper result
                     } // function
 
                     
+                    function diy_modify_posts_where( $where, &$wp_query ) {
+                        global $wpdb;
+                        // only modify the query when  post_title_like has been passed in
+                        if ( $post_title_like = $wp_query->get( 'post_title_like' ) ) {
+                            $where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'%' . esc_sql( like_escape( $post_title_like ) ) . '%\'';
+                        }
+                        return $where;
+                    } // function
+                    
+                    
+                    /**
+                    * Callback field widget
+                    *
+                    * @since	0.0.1
+                    * @access	public
+                    * @return   void
+                    */ 
                     function callback($args) {
                             echo $this->{$args['function']}();
                     } // function
@@ -1129,19 +1229,19 @@ function diy_init() {
                     /**
                     * Return a list of posts from a post type
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    string  $type   The name of a registered post type
                     * @return   array   an array of ID => post_title
                     */ 
                     function get_by_type($type) {
-                            $output = array();
-                            $posts_array = get_posts( 'post_type=' . $type ); 
-                            foreach( $posts_array as $post ) {
-                                    setup_postdata($post); 
-                                    $output[$post->ID] = $post->post_title ;
-                            }
-                            return $output;
+                        $output = array();
+                        $posts_array = get_posts( 'post_type=' . $type ); 
+                        foreach( $posts_array as $post ) {
+                                setup_postdata($post); 
+                                $output[$post->ID] = $post->post_title ;
+                        }
+                        return $output;
                     } // function
 
 
@@ -1149,52 +1249,52 @@ function diy_init() {
                     /**
                     *  The Callback function to build a post metabox based on the arguments passed in from add_meta_box()
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array   $data
                     * @param    array   $args
                     * @return   void
                     */ 
                     function post_metabox_builder($data,$args) {
-                            global $post;
+                        global $post;
 
-                            // print var_export($args['args'],true);
-                            $args=$args['args'] ;
+                        // print var_export($args['args'],true);
+                        $args=$args['args'] ;
 
-                            if (!is_array($args)) {$args = array();}
+                        if (!is_array($args)) {$args = array();}
 
-                            foreach( $args as $field_group => $group) {
-                                    if ($group['style'] == "block") {
-                                        echo "<div class='form-div'>";		
-                                    } else {
-                                         echo "<table class='form-table'><tr><th scope='row'><strong>" . $group['title'] . "</strong></th><td>";		 
-                                    }
-                                    // Load up the current value
-                                    $group_values = get_post_meta($post->ID, $group['group'], true);
+                        foreach( $args as $field_group => $group) {
+                            if ($group['style'] == "block") {
+                                echo "<div class='form-div'>";		
+                            } else {
+                                    echo "<table class='form-table'><tr><th scope='row'><strong>" . $group['title'] . "</strong></th><td>";		 
+                            }
+                            // Load up the current value
+                            $group_values = get_post_meta($post->ID, $group['group'], true);
 
-                                    $this->print_field_group($group,$group_values);
-                      
-                                    if ($group['style'] == "block") {
-                                        echo "</div>";
-                                    } else {
-                                       echo "</td></tr></table>"; 
-                                    }
+                            $this->print_field_group($group,$group_values);
 
-
-                            } // end for
-
+                            if ($group['style'] == "block") {
+                                echo "</div>";
+                            } else {
+                                echo "</td></tr></table>"; 
+                            }
+                        } // end for
                     }
 
                     /**
                     *  Print a field group
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array   $group
                     * @param    array   $group_values
                     * @return   void
                     */ 
                     function print_field_group($group,$group_values) {
+                        
+                       // print '<pre>' . var_export($group,true) . '</pre>';
+                        
                         // if there are more than one field turn individual field titles on
                         if (count( $group['fields']) > 1) {$is_group = true;} else {$is_group = false;}
                         print '<div class="field-group-wrapper ' . ( ( $group['max'] > 1 )  ? 'field-group-multi' : '') . ' ' . ( $group['sortable']   ? 'field-group-sortable' : '') .  '" data-max="' . $group['max'] . '">';
@@ -1208,7 +1308,12 @@ function diy_init() {
                         while ($counter < $sets) {
                             print '<ul class="field-group" data-set="' . $counter . '">';
                             foreach( $group['fields'] as $field_name => $field) {
-                                print '<li>';
+                                
+                                // Apply some defaults
+                                 
+                            
+                                
+                                print '<li class="field-' . $field_name . '">';
                                 if ($is_group) { print "<label class='" . ($field['label_style'] == 'block' ? "" : "fl" ) . "' style='" . ($field['label_width'] ? "width:" . $field['label_width'] . "px" : "" ) . "'>" . $field['title'] . "</label>";}
 
                                 // Set the name attribute of the field
@@ -1240,7 +1345,7 @@ function diy_init() {
                         } // end while
 
 
-                        if (($group['max'] > 1) && ($sets != $group['max'])) {print "<a href='#' class='another-group button'>Add Another</a>"; }
+                        if (($group['max'] > 1) && ($sets != $group['max'])) {print "<a href='#' class='another-group button-primary'>Add Another</a>"; }
 
                         print '<div style="clear:both;"></div></div>';
                     } // end function
@@ -1248,7 +1353,7 @@ function diy_init() {
                     /**
                     *  Save the post meta box field data
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    string  $post_id    The post id we are saving
                     * @return   void
@@ -1265,12 +1370,12 @@ function diy_init() {
                             return;
 
                         // Check some permissions
-                        if ( 'page' == $_POST['post_type'] ) {
-                                if ( !current_user_can( 'edit_page', $post_id ))
-                                return $post_id;
+                        if ( isset($_POST['post_type']) && 'page' == $_POST['post_type'] ) {
+                            if ( !current_user_can( 'edit_page', $post_id ))
+                            return $post_id;
                         } else {
-                                if ( !current_user_can( 'edit_post', $post_id ))
-                                return $post_id;
+                            if ( !current_user_can( 'edit_post', $post_id ))
+                            return $post_id;
                         }
                         
                         // only save if we have something to save
@@ -1323,7 +1428,7 @@ function diy_init() {
                     /**
                     * Print the form field group on the settings page
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array   $args
                     * @return   void
@@ -1339,7 +1444,7 @@ function diy_init() {
                     /**
                     * Build the meta box content and print the fields
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array   $data
                     * @param    array   $args
@@ -1356,12 +1461,19 @@ function diy_init() {
                             // Output the settings fields asssigned to this section
                             do_settings_fields(  $this->page, $args['args']['section'] ); 
                         echo '</table>';
+                        
+                        // Print the metabox description at the top of the metabox
+                        if ($args['args']['footer']) {
+                            echo '<div class="options-footer" style="padding:10px; line-height: 1.6;">';
+                                echo $args['args']['footer'];
+                            echo '</div>';
+                        }
                     } // function
 
                     /**
                     * Convert all autocomplete fields to a post_id [# ]
                     *
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @param    array   $data   the array of options
                     * @return   array
@@ -1395,13 +1507,13 @@ function diy_init() {
                     *
                     * The CSS is iself served instead of as separate file to keep the Diy class as a single file
                     * 
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */ 	
                     function diy_css() {
                             // Repeatable field group buttons
-                            print '.field-group { padding: 0px 0 0px 0; margin-top: 0px; margin-bottom: 0px;}';
+                            print '.field-group { padding: 0px 0 0px 0; margin-top: 0px; margin-bottom: 0px; position:relative;}';
                             print '.field-group-multi .field-group {border-bottom: 1px solid #E3E3E3; margin: 0px 0 10px 0; }';
                             print '.field-group-sortable .field-group {padding-left:20px; cursor: move; background:url(data:image/png;base64,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) no-repeat 0px 0px;}';
                             print '.another-group {float:right; margin-top: 10px; position: relative; }';
@@ -1538,13 +1650,16 @@ function diy_init() {
                                     background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUJCQTEwQjc0REU2MTFFMUI1RDg4RDkzRDI0MUNGOUQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUJCQTEwQjg0REU2MTFFMUI1RDg4RDkzRDI0MUNGOUQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBQkJBMTBCNTRERTYxMUUxQjVEODhEOTNEMjQxQ0Y5RCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBQkJBMTBCNjRERTYxMUUxQjVEODhEOTNEMjQxQ0Y5RCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pvox9icAAAJ9SURBVHjapFNNTBNREP7ebrv9sRRBEUqIweLJRhPUWE5q1JtBTYwXjdEDPaioPdmTXowHbmKtpoIxGr3pwbsHzp4UMPEiBEyNoFLo77bd3efMvrJy9yW772Vmvm++NzNPSCnxP8vHv99DAkwjbUDTxdXw8bO3RSQSgeM4bpSmabJaqdRm3j9yLPlC6IAg885vUhFgEyxFKnop/cw4cQZoNNja9lJ4IABfbPB56dWkz7HlFJN4ClwwCHz5Zt5IngSWFwFOrmkqqn02Rk6JqGPnS68fE0ZOeQSablyJXBjLG8NHBQpLKrHhB6p1pdUIKEXkMw4eEx2Wna+8nW6S56WbIrT/cCawL6nApgkkR4DTdA1dZ3Y6jypb3XRJAomkCCUOZTwFQoogVn8CrYaSHAoBu3qB0XOkhuT09gHFIlCrKn/TYmFBV71raDUd11mvAeUS8DQLzM8BsRjQ30/nWWVjH8dwbLPpeArQagGVMmDTbllA53YgHPrX7PA2skWBjQ1CEET3K4ynwGppqJZVBknEqWtAfC8w91l98SGy3aBu2CqmWlEYr41mXV3BtpSSmQ/AgWFg4r7qwp27wOwnmrhfgJ+zW5CNuqPqR0Vai2vXO3Yncv7ePURCWRrt9rFUXkzMxQyG3K60VpZQWf4y3rVg5VwFnUI+0b7P+2A3J9E1oIJ5eDbfCZ8FKW5QG9d/wFf4mo5K5DwFmW7hDs8RA+Pn44NZRPvU+G4dZV6lFbxbXLj10USWTRNFqQiEEOrJANGH3bh3caAnZWt+Zm0jhfTRK3pTWJ1O/8ED0rPOpXexWwj4x8Oh9QA7TNUhvW23yWFTCdf4QvSZvDP2rwADANhwFarl2kEzAAAAAElFTkSuQmCC");
                                     background-position: right 5px;
                                     background-repeat: no-repeat;
+                                    padding-right: 18px;
                                    }
                                    input:required:valid {
                                     background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUQ0NUM1Rjg0REU1MTFFMTk2MzZBNTREMjg1MjA3NzIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUQ0NUM1Rjk0REU1MTFFMTk2MzZBNTREMjg1MjA3NzIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBRDQ1QzVGNjRERTUxMUUxOTYzNkE1NEQyODUyMDc3MiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBRDQ1QzVGNzRERTUxMUUxOTYzNkE1NEQyODUyMDc3MiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PvaZ3uIAAALlSURBVHjapFNNSBRhGH5md3bH9W/SFX92xUqxpcg/NA9a/hRGEJH9QIeICMFTBy/dAhG6denQKbKI6BDhrcgM2w7dRMkfEhNXV911/2d2dtfZ3ZnZ6ftGHaJrH7zfwPM+z8P7PczL6LqO/zksve5OMIAVUCyArqG+hq+/19Z06UplebWH9hNSZG3RN/slnNx9y1iwYysQUAPejesHBvSoBLDbuAe3+x89vthxq7G82EbQ3GGXq5HksT7vwtTIhx9PnyhK7jX79wQF4shxxSMPh5+97PZ0IZVbQTwjQdMVg2S12MCxPK733mysq2p49XxqzKLk9idpz0IvxYa64b7RiU5PM0IpL4RsAFJeQCovIa2kkZDD2Ir+xK74GV0eDyiXakwDN18/0tPS6w6l5ohQIgYxJPNJpJQUwulthBMRVBb1ICpI8Me/obf1vJtqTIPTJ9uvMWwcYlZAQNhCKCpgL7mDoORHLCGgxTUAl7MEfJGL4AEwbMLQmAZ2TmtMKwkExQBKmVr0Nd+AQ6uCJMi40HQVfEkG/sg0FkLT0Kw28rSooTFDlOm4+RREOYMSRwIObhX9p9qRVztIuBLWg8uY3VyAs+I49lUFUlYyNKZBTAz7hHSoSrVmMReZRyYfxNCZTiK2Y2V7FTMbiyjjq0igElQ9BzujGhrTYHcv8EmUQt2qRYPVXob5WAD7izLqSssws/kL5XwNlIKOrJYDS/4kUQobGjODlJydXPOtB3iOI0SVmDiwJMbw0bcKrtRJsAKZKgeVfCmHcqnGNCiyI/DbvzG+F/fDTdJmCWqxcrA5eGQVBbKSB2tljB7lUC7VUC1Dl6l1kAGZEM4GjF6+c2K8uaXBlVetJMSDRbOzDCkN68vbwZn3WxPxbbywkPVZ8uoHBgzDmNt1zIWhswO2+22DFeec1SW1FItHMqFFrzC38l15Iwbx9YhraP8xYA6DLSJVSR7oMNACZLqUpLJ076j2yOCPAAMAeINpp0KtkLIAAAAASUVORK5CYII=");
                                     background-position: right 5px;
                                     background-repeat: no-repeat;
+                                    padding-right: 18px;
                                    }';
-
+                            // Add any plugin defined css
+                            print apply_filters('diy_css','');
                     } // end function
 
 
@@ -1553,7 +1668,7 @@ function diy_init() {
                     *
                     * The JS is self served instead of as separate file to keep the diy as a single file
                     * 
-                    * @since	0.1
+                    * @since	0.0.1
                     * @access	public
                     * @return   void
                     */ 	
@@ -1596,13 +1711,13 @@ function diy_init() {
 
                                             // Add the add another button if needed
                                             if (fieldcount < max) {
-                                                jQuery(wrapper).find(".field-group:last").after("<a href=\'#\' class=\'another-group button\'>Add Another</a>")
+                                                jQuery(wrapper).find(".field-group:last").after("<a href=\'#\' class=\'another-group button-primary\'>Add Another</a>")
                                             }
 
                                         }';
                             
                             // if the delete group button is pressed
-                             print '    $(".delete-group").live("click", function (event) {
+                             print '    $("body").on("click",".delete-group", function (event) {
                                             event.preventDefault();
 
                                             // Save a reference to the outer wrapper	
@@ -1618,15 +1733,15 @@ function diy_init() {
                             // If the add group button is pressed
                             print '$("body").on("click",".another-group",function(event) {
                                     event.preventDefault();
-
+                                 
                                     var wrapper = $(this).closest(".field-group-wrapper");
 
                                     var newgroup = jQuery(wrapper).find(".field-group:first").clone();
 
                                     // Clear the attributes
                                     
-                                    newgroup.find(".field:not([type=checkbox])").attr("value","");
-                         
+                                    newgroup.find(".field:not([type=checkbox],[type=radio])").attr("value","").attr("checked",false);
+                                    newgroup.find(".field[type=radio]:first").attr("checked",true);
                                     newgroup.find(".field").each(function (index) {
 
                                             // Date picker gives the input field an id so we must remove it here
@@ -1663,7 +1778,7 @@ function diy_init() {
                             window.send_to_editor = function (html) {
                                     var imgurl, aurl;
                                     if (jQuery(".attachment.active").length > 0) {
-                                    console.log(html);
+                                    
                                             imgurl = jQuery("img",html).attr("src");
                                             aurl = jQuery("a","<div>" + html + "</div>").attr("href");
 
@@ -1799,34 +1914,40 @@ function diy_init() {
 
 
                                     });';
-
+                            // Add any plugin defined admin js
+                            print apply_filters('diy_js','');
                             // end closure
                             print '});';
+                            
+                           
 
                     } // end function
                 } // end class definition
 
-                function diy_option($group,$id,$instance = 0) {
-                    $result = array();
+                function diy_option($group,$field,$instance = 0) {
+                    // retrieve the option
                     $result = get_option($group);
-
-                    if (is_array($result)) {
-                            return $result[$instance][$id];
+                    // if the value has been saved/set
+                    if ((bool) $result[$instance][$field]) {
+                        return $result[$instance][$field];
                     } else {
-                            return '';
+                        // return an empty string like get_post_meta does if the key is not set
+                        return '';
                     }
                 } // end function
 
 
                 function diy_post_meta($post_id,$group,$field,$instance = 0) {
-                        $result = array();
-                        $result = get_post_meta($post_id,$group,true);
+                    // retrieve the option
+                    $result = get_post_meta($post_id,$group,true);
 
-                        if (is_array($result)) {
-                                return $result[$instance][$field];
-                        } else {
-                                return '';
-                        }
+                    // if the value has been saved/set
+                    if ((bool) $result[$instance][$field]) {
+                        return $result[$instance][$field];
+                    } else {
+                        // return an empty string like get_post_meta does if the key is not set
+                        return '';
+                    }
                 } // end function
                     
     } // end if class exists
