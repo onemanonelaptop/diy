@@ -1003,6 +1003,13 @@ function diy_init() {
                         echo $this->description($args['description']);
                     } // function
 
+                    
+                    function editor($args) {
+                        $settings=array('textarea_name' => $args['name']);
+                        wp_editor(  $args['value'], 'testeditor', $settings );
+                    }
+                    
+                    
                     /**
                     * Render a google map
                     *

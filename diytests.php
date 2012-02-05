@@ -585,7 +585,7 @@ $this->field(
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-checkbox-single", // The form field name
+                            "group" => "post-tests-checkbox-single", // The form field name
                             "title" => "Checkbox", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
@@ -600,7 +600,7 @@ $this->field(
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-text-single", // The form field name
+                            "group" => "post-tests-text-single", // The form field name
                             "title" => "Text", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
@@ -615,7 +615,7 @@ $this->field(
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-textarea-single", // The form field name
+                            "group" => "post-tests-textarea-single", // The form field name
                             "title" => "Textarea", // Title used when prompting for input
                             "max" => "1",
                             "style" => "block",
@@ -631,7 +631,7 @@ $this->field(
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-select-single", // The form field name
+                            "group" => "post-tests-select-single", // The form field name
                             "title" => "Select", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
@@ -644,10 +644,13 @@ $this->field(
                         ) // end array
                     );
                     
+                    
+                    
+                    
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-color-single", // The form field name
+                            "group" => "post-tests-color-single", // The form field name
                             "title" => "Colors", // Title used when prompting for input
                             "max" => "1",
                            
@@ -663,7 +666,7 @@ $this->field(
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-attachment-single", // The form field name
+                            "group" => "post-tests-attachment-single", // The form field name
                             "title" => "Attachment", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
@@ -675,30 +678,17 @@ $this->field(
                         ) // end array
                     );
                     
-                    $this->field(
-                        array(
-                            "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-wysiwyg-single", // The form field name
-                            "title" => "WYSIWYG", // Title used when prompting for input
-                            "max" => "1",
-                            "fields" => array(
-                                "value" => array(
-                                    "type" => "text",
-                                    "description" => "WYSIWYG Description"
-                                )
-                            ) // end fields
-                        ) // end array
-                    );
+                   
                     
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-date-single", // The form field name
+                            "group" => "post-tests-date-single", // The form field name
                             "title" => "Date", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
                                 "value" => array(
-                                    "type" => "text",
+                                    "type" => "date",
                                     "description" => "Date Description"
                                 )
                             ) // end fields
@@ -708,7 +698,7 @@ $this->field(
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-suggest-post-single", // The form field name
+                            "group" => "post-tests-suggest-post-single", // The form field name
                             "title" => "Suggest Posts", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
@@ -724,8 +714,8 @@ $this->field(
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
-                            "group" => "test-suggest-pages-single", // The form field name
-                            "title" => "Suggest Posts", // Title used when prompting for input
+                            "group" => "post-tests-suggest-pages-single", // The form field name
+                            "title" => "Suggest Pages", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
                                 "value" => array(
@@ -737,9 +727,228 @@ $this->field(
                         ) // end array
                     ); 
                     
-                    
+                     $this->field(
+                        array(
+                            "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
+                            "group" => "post-tests-suggest-users-single", // The form field name
+                            "title" => "Suggest All Users", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest All Users",
+                                    "wp_query" => array(),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
 
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
+                            "group" => "post-tests-suggest-subscribers-single", // The form field name
+                            "title" => "Suggest Users (Subscriber)", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest All Subscribers",
+                                    "wp_query" => array("role" => "subscriber"),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
+                    
+                    
+                    /**
+                     * Post Metabox Multiple Fields Test 
+                     */
+                    
+                     
+                     $this->metabox(
+                            array( 
+                                'id' => 'field-post-tests-multi',
+                                'title' => 'Field Post Tests (multi)',
+                                'post_type' => array('post','page')
+                            )
+                    ); 
+                    
+                 
+                        
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-checkbox-multi", // The form field name
+                            "title" => "Checkbox", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "checkbox",
+                                    "description" => "Checkbox Description"
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-text-multi", // The form field name
+                            "title" => "Text", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "text",
+                                    "description" => "Text Description",
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-textarea-multi", // The form field name
+                            "title" => "Textarea", // Title used when prompting for input
+                            "max" => "5",
+                            "style" => "block",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "textarea",
+                                    "description" => "Textarea Description",
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-select-multi", // The form field name
+                            "title" => "Select", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "select",
+                                    "description" => "Select Description",
+                                    "selections" => array("0"=>"0","1"=>"1","2"=>"2")
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-color-multi", // The form field name
+                            "title" => "Colors", // Title used when prompting for input
+                            "max" => "5",
+                           
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "color",
+                                    "description" => "Color Description",
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-attachment-multi", // The form field name
+                            "title" => "Attachment", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "attachment",
+                                    "description" => "Attachment Description"
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
                    
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-date-multi", // The form field name
+                            "title" => "Date", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "date",
+                                    "description" => "Date Description"
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-suggest-post-multi", // The form field name
+                            "title" => "Suggest Posts", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest Posts Description",
+                                    "wp_query" => array("post_type" => "post"),
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-suggest-pages-multi", // The form field name
+                            "title" => "Suggest Pages", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest Pages Description",
+                                   "wp_query" => array("post_type" => "page"),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
+                    
+                     $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-suggest-users-multi", // The form field name
+                            "title" => "Suggest All Users", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest All Users",
+                                    "wp_query" => array(),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
+
+                    $this->field(
+                        array(
+                            "metabox" => "field-post-tests-multi", // the id of the metabox this field resides inside
+                            "group" => "post-tests-suggest-subscribers-multi", // The form field name
+                            "title" => "Suggest Users (Subscriber)", // Title used when prompting for input
+                            "max" => "5",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest All Subscribers",
+                                    "wp_query" => array("role" => "subscriber"),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
 
                 } // end function
                 
