@@ -314,6 +314,24 @@ $this->field(
 				) // end fields
 			) // end array
                              );
+                     
+                     
+                     $this->field(
+                        array(
+                            "metabox" => "field-tests-single", // the id of the metabox this field resides inside
+                            "group" => "test-suggest-pages-single2", // The form field name
+                            "title" => "Suggest Posts", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest Posts Custom Filter",
+                                    "suggestions" => "page",
+                                    "wp_query" => array("post_type" => "abcd"),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
                     
                     // MULTI FIELD TESTS
                     
@@ -683,6 +701,8 @@ $this->field(
                             ) // end fields
                         ) // end array
                     ); 
+                    
+                    
 
                    
 

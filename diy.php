@@ -156,6 +156,11 @@ function diy_init() {
                     */
                     protected $icon = '';
                     
+                     /**
+                    * @var  array    Store any custom suggest queries for use in ajax requests
+                    */
+                    protected $suggest_queries = array();
+                    
                     /**
                     * @var array The options page defaults
                     */
@@ -188,6 +193,7 @@ function diy_init() {
                         "preview" => false,
                         "map" => "",
                         "default" => "",
+                        "wp_query" => "",
                         
                     );
                     
@@ -230,30 +236,33 @@ function diy_init() {
                         $this->diy_path = str_replace(basename( $this->diy_file),"",$this->diy_file);
                         $this->diy_url = str_replace(ABSPATH,trailingslashit(get_option( 'siteurl' )),$this->diy_path);
 
-                        // Register the child plugins fields
-                        add_action('admin_init', array($this,'diy_fields')); 
-                        
-                        // Register the child plugins metaboxes
-                        add_action('admin_init', array($this,'diy_metaboxes'));
+                        // Save some effort if its an ajax request
+                        if (!defined('DOING_AJAX') || !DOING_AJAX) {
+                            // Register the child plugins fields
+                            add_action('admin_init', array($this,'diy_fields')); 
 
-                        // Save the custom post fields with the post data
-                        add_action('save_post', array(&$this,'diy_save_post')); 
+                            // Register the child plugins metaboxes
+                            add_action('admin_init', array($this,'diy_metaboxes'));
 
-                        // Register the scripts and styles needed for metaboxes and fields
-                        add_action('admin_init', array(&$this,'diy_scripts_and_styles') );	
+                            // Force the plugin options page to have two columns
+                            add_filter('screen_layout_columns', array(&$this, 'diy_settings_page_columns'), 10, 2);
 
-                        // Add the plugins options page	unless the Diy Class is being used just for metaboxes		
-                        if ($this->usage != 'meta') {
-                            // Add the plugins options page
-                            add_action( 'admin_menu', array($this,'diy_add_options_page') );
-                        }
-                        
-                        // Force the plugin options page to have two columns
-                        add_filter('screen_layout_columns', array(&$this, 'diy_options_page_columns'), 10, 2);
+                            // Save the custom post fields with the post data
+                            add_action('save_post', array(&$this,'diy_save_post')); 
 
-                        // Add the predefined metaboxes to the plugin options page as long as generic isnt true
-                        if ($this->generic == false) {
-                            add_action('admin_init', array(&$this,'diy_add_predefined_metaboxes') ); 
+                            // Register the scripts and styles needed for metaboxes and fields
+                            add_action('admin_init', array(&$this,'diy_scripts_and_styles') );	
+
+                            // Add the plugins options page	unless the Diy Class is being used just for metaboxes		
+                            if ($this->usage != 'meta') {
+                                // Add the plugins options page
+                                add_action( 'admin_menu', array($this,'diy_add_options_page') );
+                            }
+
+                            // Add the predefined metaboxes to the plugin options page as long as generic isnt true
+                            if ($this->generic == false) {
+                                add_action('admin_init', array(&$this,'diy_add_predefined_metaboxes') ); 
+                            }
                         }
 
                         // Setup the ajax callback for autocomplete widget
@@ -487,13 +496,13 @@ function diy_init() {
                         // Add a theme page or an option page depending on the diy usage
                         if ($this->usage == 'theme') {
                             $this->page = add_theme_page( __($this->settings_page_title), __($this->settings_page_link), 'edit_theme_options', $this->slug, array(&$this,'diy_render_options_page' ));
-                            add_action('load-'.$this->page,  array(&$this, 'diy_loading_options_page'));	
+                            add_action('load-'.$this->page,  array(&$this, 'diy_enqueue_settings_page_scripts'));	
                         } else if ($this->usage == 'plugin') {
                             $this->page = add_options_page(__($this->settings_page_title), __($this->settings_page_link), 'manage_options', $this->slug, array($this, 'diy_render_options_page'));
                             add_filter( 'plugin_action_links', array(&$this, 'diy_add_settings_link'), 10, 2 );
 
                             // Run stuff as and when this options page loads
-                            add_action('load-'.$this->page,  array(&$this, 'diy_loading_options_page'));
+                            add_action('load-'.$this->page,  array(&$this, 'diy_enqueue_settings_page_scripts'));
                         }
                     } // function
 
@@ -504,7 +513,7 @@ function diy_init() {
                     * @access	public
                     * @return   void
                     */
-                    function diy_loading_options_page() {
+                    function diy_enqueue_settings_page_scripts() {
                         wp_enqueue_script('common');
                         wp_enqueue_script('wp-lists');
                         wp_enqueue_script('postbox');
@@ -539,7 +548,7 @@ function diy_init() {
                     * @param   string  $screen
                     * @return  int number of columns
                     */
-                    function diy_options_page_columns($columns, $screen) {
+                    function diy_settings_page_columns($columns, $screen) {
                         if ($screen == $this->page) {
                             $columns[$this->page] = 2;
                             update_user_option(true, "screen_layout_$this->page", "2" );
@@ -652,6 +661,8 @@ function diy_init() {
                         print '<li><strong>Diy URL:</strong> ' . $this->diy_url . '</li>';
                         print '<li><strong>Meta:</strong> ' . var_export($this->meta,true) . '</li>';
                         print '<li><strong>Metaboxes:</strong> ' . var_export($this->metaboxes,true) . '</li>';
+                        print '<li><strong>Suggest Queries:</strong> <pre>' . print_r($this->suggest_queries,true) . '</pre></li>';
+                        
                         print '</div>';
                     } // function
 
@@ -707,26 +718,37 @@ function diy_init() {
                     * @return   void
                     */
                     function diy_scripts_and_styles() {
-                            wp_enqueue_script( 'jquery' );
-                            wp_enqueue_script( 'jquery-ui-core' );
-                            wp_enqueue_script( 'jquery-ui-datepicker' );
+                        wp_enqueue_script( 'jquery' );
+                        wp_enqueue_script( 'jquery-ui-core' );
+                        wp_enqueue_script( 'jquery-ui-datepicker' );
 
-                            // Register our dynamic css and js files
-                            wp_register_style('diy', home_url() .'?diy=css');
-                            wp_register_script('diy',  home_url() .'?diy=js', array('jquery','media-upload','thickbox','editor'));
+                        // Register our dynamic css and js files
+                        wp_register_style('diy', home_url() .'?diy=css');
+                        wp_register_script('diy',  home_url() .'?diy=js', array('jquery','media-upload','thickbox','editor'));
 
-                            wp_register_script('gmap','http://maps.google.com/maps/api/js?sensor=false');
+                       
+                        // if admin.js exists in the child plugin include it
+                        if (file_exists($this->plugin_path . 'admin.js')) {
+                            wp_register_script($this->slug . '-admin' ,$this->plugin_url . 'admin.js');
+                        }
+                        
+                        // if admin.css exists in the child plugin include it
+                        if (file_exists($this->plugin_path . 'admin.css')) {
+                            wp_register_style($this->slug . '-admin' ,$this->plugin_url . 'admin.css');
+                        }
+                        
+                        
+                        wp_register_script('gmap','http://maps.google.com/maps/api/js?sensor=false');
 
-                            // Add custom scripts and styles to the plugin/theme page only
-                            add_action('admin_print_scripts-' . $this->page, array(&$this, 'diy_admin_scripts'));
-                            add_action('admin_print_styles-' . $this->page, array(&$this,  'diy_admin_styles'));
+                        // Add custom scripts and styles to the plugin/theme page only
+                        add_action('admin_print_scripts-' . $this->page, array(&$this, 'diy_admin_scripts'));
+                        add_action('admin_print_styles-' . $this->page, array(&$this,  'diy_admin_styles'));
 
-                            // Add custom scripts and styles to the post editor pages
-                            add_action('admin_print_scripts-post.php', array(&$this, 'diy_admin_scripts'));
-                            add_action('admin_print_scripts-post-new.php',array(&$this,  'diy_admin_scripts'));
-                            add_action('admin_print_styles-post.php', array(&$this, 'diy_admin_styles'));
-                            add_action('admin_print_styles-post-new.php',array(&$this,  'diy_admin_styles'));	
-
+                        // Add custom scripts and styles to the post editor pages
+                        add_action('admin_print_scripts-post.php', array(&$this, 'diy_admin_scripts'));
+                        add_action('admin_print_scripts-post-new.php',array(&$this,  'diy_admin_scripts'));
+                        add_action('admin_print_styles-post.php', array(&$this, 'diy_admin_styles'));
+                        add_action('admin_print_styles-post-new.php',array(&$this,  'diy_admin_styles'));	
                     } // function
 
                     /**
@@ -779,7 +801,12 @@ function diy_init() {
                     function field($group) {
                         // go through each defined field in the group and apply the defaults
                         foreach ($group['fields'] as $field_name => $field_definition) {
+                            
                             $group['fields'][$field_name] =  wp_parse_args($group['fields'][$field_name], $this->field_defaults );
+                            // Save all queiries for later use
+                            if ( $group['fields'][$field_name]['wp_query']) { 
+                                $this->suggest_queries[$group['group']][$field_name] = $group['fields'][$field_name]['wp_query'];
+                            }
                         }
                         
                         // Apply the field group defaults and store in the fields array
@@ -1112,7 +1139,7 @@ function diy_init() {
                     * @return   void
                     */ 		
                     function suggest($args) {
-                        echo "<input type='text'  class='suggest field' data-id='" . $args['value'] . "' data-suggest='" . $args['suggestions']  . "'  size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $this->suggest_get_title($args['value'])  . "'/>";					
+                        echo "<input type='text'  class='suggest field' data-id='" . $args['value'] . "' data-suggest='" . $args['suggestions']  . "'   data-group='" . $args['group']  . "'    data-field='" . $args['field']  . "' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $this->suggest_get_title($args['value'])  . "'/>";					
                         echo $this->description($args['description']);
                     } // function
 
@@ -1125,7 +1152,7 @@ function diy_init() {
                     * @return   void
                     */ 		
                     function suggest_users($args) {
-                        echo "<input type='text'  class='suggest field' data-id='" . $args['value'] . "' data-suggest='" . $args['suggestions']  . "'  size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $this->suggest_get_title($args['value'])  . "'/>";					
+                        echo "<input type='text'  class='suggest field' data-id='" . $args['value'] . "' data-suggest='" . $args['suggestions']  . "'   data-group='" . $args['group']  . "'    data-field='" . $args['field']  . "' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $this->suggest_get_title($args['value'])  . "'/>";					
                         echo $this->description($args['description']);
                     } // function
 
@@ -1182,23 +1209,36 @@ function diy_init() {
                     function diy_suggest_posts_callback() {
                         global $wpdb;
 
-                        $posttype =  $wpdb->escape($_GET['type']);
+                        $post_type =  $wpdb->escape($_GET['type']);
+                        $group =  $wpdb->escape($_GET['group']);
+                        $field =  $wpdb->escape($_GET['field']);
+                        
                         $in =  $wpdb->escape($_GET['q']);
 
-                        $query = "SELECT ID from $wpdb->posts where post_type = '$posttype' AND post_title like '%$in%' ";
-                        $mypostids = $wpdb->get_col($query);
-
-                        foreach ($mypostids as $key => $value) {
-                                print get_the_title($value) . " [#" .  $value . "]" . "\n";
+                     
+                        // get the custom query from the saved field definition
+                        $custom_args = array();
+                        if (isset($this->suggest_queries[$group][$field])) {
+                            $custom_args = $this->suggest_queries[$group][$field];
                         }
-                        
                         
                         $args = array(
                             'post_title_like' => $in,
-                            'post_type' => $posttype,
+                            'post_type' => $post_type,
                         );
-                        $res = new WP_Query($args);
                         
+                        $args = wp_parse_args($custom_args,$args);
+                        
+                        
+                        
+                        $the_query = new WP_Query($args);
+                        // The Loop
+                        while ( $the_query->have_posts() ) : $the_query->the_post();
+                                echo  get_the_title(). " [#" . get_the_ID() . "]" . "\n";
+                             
+                        endwhile;
+
+                       
                         
                         die(); // this is required to return a proper result
                     } // function
@@ -1319,6 +1359,9 @@ function diy_init() {
                                 // Set the name attribute of the field
                                 $field['name'] = "" . $group['group'] . "[" . $counter . "][" . $field_name . "]";
                                 $field['id'] = $group['group'] . "-" . $counter . "-" . $field_name;
+                                
+                                $field['group'] = $group['group'];
+                                $field['field'] = $field_name;
                                 
                                 // Set the current value of the field
                                 if (is_array($group_values)) {
@@ -1678,7 +1721,7 @@ function diy_init() {
                             print '    "use strict";';
 
                             // Apply sorting to DOM elements where class is field-group-sortable
-                            print '    $(".field-group-sortable").sortable({
+                            print '    jQuery(".field-group-sortable").sortable({
                                             update: function(event,ui) {               
                                                 reset_field_order(this);
                                             }
@@ -1703,7 +1746,7 @@ function diy_init() {
                                                             );
                                                     });
                                                     // Add the delete buttons back in
-                                                    if (index != 0) { $("<a href=\'#\' class=\'delete-group button\'>Delete </a>").appendTo($(this)); }
+                                                    if (index != 0) { jQuery("<a href=\'#\' class=\'delete-group button\'>Delete </a>").appendTo(jQuery(this)); }
                                              });
                                             
                                             // Remove the add another button
@@ -1717,42 +1760,46 @@ function diy_init() {
                                         }';
                             
                             // if the delete group button is pressed
-                             print '    $("body").on("click",".delete-group", function (event) {
+                             print '    jQuery("body").on("click",".delete-group", function (event) {
                                             event.preventDefault();
 
                                             // Save a reference to the outer wrapper	
-                                            var wrapper = $(this).closest(".field-group-wrapper");		
+                                            var wrapper = jQuery(this).closest(".field-group-wrapper");		
 
                                             // remove the one we want to delete
-                                            $(this).closest(".field-group").remove();
+                                            jQuery(this).closest(".field-group").remove();
 
                                             // Reset the field ordering
                                             reset_field_order(wrapper);
                                         });'; 
 
                             // If the add group button is pressed
-                            print '$("body").on("click",".another-group",function(event) {
+                            print 'jQuery("body").on("click",".another-group",function(event) {
                                     event.preventDefault();
                                  
-                                    var wrapper = $(this).closest(".field-group-wrapper");
+                                    var wrapper = jQuery(this).closest(".field-group-wrapper");
 
                                     var newgroup = jQuery(wrapper).find(".field-group:first").clone();
 
                                     // Clear the attributes
-                                    
                                     newgroup.find(".field:not([type=checkbox],[type=radio])").attr("value","").attr("checked",false);
                                     newgroup.find(".field[type=radio]:first").attr("checked",true);
                                     newgroup.find(".field").each(function (index) {
 
                                             // Date picker gives the input field an id so we must remove it here
-                                            if ($(this).hasClass("dated")) { $(this).attr("id",""); }
+                                            if (jQuery(this).hasClass("dated")) { jQuery(this).attr("id",""); }
                                             
                                             // remove the classes so the new fields get rebound with handlers
-                                            $(this).removeClass("suggested picked hasDatepicker dated");
+                                            jQuery(this).removeClass("suggested picked hasDatepicker dated");
+                                            
+                                            // Change the field index to a high number temporarily so that we can insert it before field reordering
+                                            jQuery(this).attr("name",
+                                                jQuery(this).attr("name").replace(/\[(.*)\]\[/,"[9999999][")
+                                            );
                                            
                                     });
 
-                                    newgroup.insertBefore($(this));
+                                    newgroup.insertBefore(jQuery(this));
                                       
                                     // Reset the field ordering
                                     reset_field_order(wrapper);
@@ -1801,7 +1848,7 @@ function diy_init() {
                             print '     jQuery(".suggest:not(.suggested)").each(';
                             print '         function () { ';
                             print '             jQuery(this).suggest(';
-                            print '                 ajaxurl + "?action=suggest_action&type=" + jQuery(this).data("suggest")';
+                            print '                 ajaxurl + "?action=suggest_action&type=" + jQuery(this).data("suggest") + "&group=" + jQuery(this).data("group") + "&field=" + jQuery(this).data("field") + ""';
                             print '             );';
                             print '             jQuery(this).addClass("suggested");';
                             print '         }';
@@ -1855,19 +1902,19 @@ function diy_init() {
 
 
                                     // for each div with the class of gmap
-                                    $(".gmap").each(function(index){
+                                    jQuery(".gmap").each(function(index){
                                             var map = [];
 
                                             // populate the data attributes
-                                            var savedlat = $("[name=\"" + $(this).data("latfield") + "\"]").val();
-                                            var savedlong = $("[name=\"" + $(this).data("longfield") + "\"]").val();
+                                            var savedlat = jQuery("[name=\"" + jQuery(this).data("latfield") + "\"]").val();
+                                            var savedlong = jQuery("[name=\"" + jQuery(this).data("longfield") + "\"]").val();
 
                                             // Setup the map center/marker location
                                             var latlng = new google.maps.LatLng(savedlat, savedlong);
 
                                             // define the map options
                                             var options = {
-                                                    zoom: $(this).data("zoom"),
+                                                    zoom: jQuery(this).data("zoom"),
                                                     center: latlng,
                                                     mapTypeId: google.maps.MapTypeId.ROADMAP,
                                                     draggableCursor: "crosshair",
@@ -1875,7 +1922,7 @@ function diy_init() {
                                             };
 
 
-                                            map[index] = new google.maps.Map(document.getElementById( $(this).attr("id") ), options);
+                                            map[index] = new google.maps.Map(document.getElementById( jQuery(this).attr("id") ), options);
 
                                             // stick the map marker on the map
                                             var marker;
@@ -1886,8 +1933,8 @@ function diy_init() {
 
                                             // add the map clickerooner
 
-                                            map[index].latfield = $(this).data("latfield");
-                                            map[index].longfield = $(this).data("longfield");
+                                            map[index].latfield = jQuery(this).data("latfield");
+                                            map[index].longfield = jQuery(this).data("longfield");
 
                                             google.maps.event.addListener(map[index],"click", function(location) {
 
