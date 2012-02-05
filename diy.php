@@ -194,6 +194,7 @@ function diy_init() {
                         "map" => "",
                         "default" => "",
                         "wp_query" => "",
+                        "expanded" => false
                         
                     );
                     
@@ -1337,10 +1338,7 @@ function diy_init() {
                     * @param    array   $group_values
                     * @return   void
                     */ 
-                    function print_field_group($group,$group_values) {
-                        
-                       // print '<pre>' . var_export($group,true) . '</pre>';
-                        
+                    function print_field_group($group,$group_values) { 
                         // if there are more than one field turn individual field titles on
                         if (count( $group['fields']) > 1) {$is_group = true;} else {$is_group = false;}
                         print '<div class="field-group-wrapper ' . ( ( $group['max'] > 1 )  ? 'field-group-multi' : '') . ' ' . ( $group['sortable']   ? 'field-group-sortable' : '') .  '" data-max="' . $group['max'] . '">';
@@ -1424,7 +1422,7 @@ function diy_init() {
                         }
                         
                         // only save if we have something to save
-                        if (isset($_POST['post_type'])  && $_POST['post_type'] && $this->meta[$_POST['post_type']]  ) {
+                        if (isset($_POST['post_type'])  && $_POST['post_type'] && isset($this->meta[$_POST['post_type']])  ) {
 
                             // go through each of the registered post metaboxes
                             foreach ($this->meta[$_POST['post_type']] as $section_name => $section) {
@@ -1433,7 +1431,12 @@ function diy_init() {
                                 foreach($section as $group_name => $group) {
                                     
                                     // Get the post data for this field group
-                                    $data = $_POST[$group['group']];
+                                    if (isset($_POST[$group['group']])) {
+                                        $data = $_POST[$group['group']];
+                                    } else {
+                                        $data = "";
+                                    }
+                                        
 
                                     // Convert autosuggest value to a post id
                                     $data= $this->suggest_to_id($data);
