@@ -157,12 +157,12 @@ function diy_init() {
                     protected $icon = '';
                     
                      /**
-                    * @var  array    Store any custom suggest queries for use in ajax requests
+                    * @var  array    Store an array of WP_Query arguments use by suggest field widgets during an ajax request (indexed by [group][field])
                     */
                     protected $suggest_queries = array();
                     
                     /**
-                    * @var array The options page defaults
+                    * @var array The defaults applied to all  new metaboxes
                     */
                     protected $metabox_defaults = array (
                         "context" => "normal",
@@ -174,7 +174,7 @@ function diy_init() {
                     );
                     
                     /**
-                    * @var array The individual field defaults
+                    * @var array The defaults applied to an individual field
                     */
                     protected $field_defaults = array (
                         "tooltip" => "",
@@ -198,13 +198,42 @@ function diy_init() {
                     );
                     
                     /**
-                    * @var array The field group defaults
+                    * @var array The defaults applied to a group of fields
                     */
                     protected $field_group_defaults = array (
                         "description" => "",
                         "sortable" => false,
                         "style" => "",
                     );
+                    
+                    
+                    /**
+                    * Constructor
+                    *
+                    * @since	0.0.1
+                    * @param 	string  $file 	The filename of the plugin extending this class
+                    * @access	public
+                    * @return   void
+                    */
+                    function __construct($file = __FILE__) {
+                        // Save the filename of the child plugin
+                        $this->filename = plugin_basename($file);
+                        
+                        // Initialise the plugin if the method has been defined in the extended class
+			if ( is_callable( array($this, 'init') ) ) {
+                            $this->init();
+			}    
+                        
+                        // @todo Sanity check for properties and field declarations
+                        
+                        // Start the plugin
+                        $this->diy_start();
+                        
+                        // Call the child plugins start method
+                        if ( is_callable( array($this, 'start') ) ) {
+                            $this->start();
+			}    
+                    } // function
                     
                     /**
                     * This starts the process of defining the plugin
@@ -217,7 +246,7 @@ function diy_init() {
                                 return;
                         }
 
-                        // generate the options_group var name
+                        // generate the options_group variable name from the slug
                         if ($this->options_group == '') {
                                 $this->options_group = $this->slug;
                         }
@@ -270,6 +299,7 @@ function diy_init() {
                         // add_action('wp_ajax_suggest_action', array(&$this,'diy_suggest_users_callback'));
                         add_filter( 'posts_where', array(&$this,'diy_modify_posts_where'), 10, 2 );
 
+                      
                         // Setup some query vars to serve javascript and css via a url
                         add_action( 'template_redirect', array( &$this, 'diy_script_server' ));
                         add_filter( 'query_vars', array( &$this, 'diy_query_vars' ));
@@ -304,10 +334,10 @@ function diy_init() {
                         // Go through all the defined fields
                         foreach($this->fields as $field) {
                             
-                            // get the metabox post_types the field is attached to
+                            // This field is inside a metabox, that metabox may be use on more than one poswt type, so go get the post types
                             $metabox_post_types = $this->diy_get_metabox_post_types($field['metabox']);
 
-                            // If a post type is set then add the new field to the appropriate metabox.
+                            // If a post type is set then add the new field to the appropriate metabox
                             if ($metabox_post_types!="") {
                                 // If its not an array, then make it one
                                 if (!is_array($metabox_post_types)) {
@@ -421,30 +451,7 @@ function diy_init() {
                         } // end foreach
                     } // end function
 
-                    /**
-                    * Vogon constructor
-                    *
-                    * @since	0.0.1
-                    * @param 	string  $file 	Contains __FILE__ for the file extending this class
-                    * @access	public
-                    * @return   void
-                    */
-                    function __construct($file = __FILE__) {
-                        // Save the filename of the child plugin
-                        $this->filename = plugin_basename($file);
-                        
-                        // Initialise the plugin if the method has been defined in the extended class
-			if ( is_callable( array($this, 'init') ) ) {
-                            $this->init();
-			}    
-                        // Start the plugin
-                        $this->diy_start();
-                        
-                        // Call the child plugins start method
-                        if ( is_callable( array($this, 'start') ) ) {
-                            $this->start();
-			}    
-                    } // function
+                    
 
 
                     /**
@@ -1139,8 +1146,15 @@ function diy_init() {
                     * @return   void
                     */ 		
                     function suggest($args) {
-                        echo "<input type='text'  class='suggest field' data-id='" . $args['value'] . "' data-suggest='" . $args['suggestions']  . "'   data-group='" . $args['group']  . "'    data-field='" . $args['field']  . "' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $this->suggest_get_title($args['value'])  . "'/>";					
+                        if(isset($args['wp_query']['post_type'])) {
+                            $mode = 'posts';
+                        } else {
+                            $mode = 'users';
+                        }
+                        
+                        echo "<input type='text'  class='suggest field' data-id='" . $args['value'] . "' data-group='" . $args['group']  . "'    data-field='" . $args['field']  . "' size='57'  style='" . $this->width($args['width']) . "' " .  $this->placeholder($args['placeholder']) . " name='" . $args['name'] . "' value='" . $this->suggest_get_title($args['value'],$mode)  . "'/>";					
                         echo $this->description($args['description']);
+                        
                     } // function
 
                     /**
@@ -1178,9 +1192,14 @@ function diy_init() {
                     * @return   string
                     * @access	public
                     */ 
-                    function suggest_get_title($id) {
-                        if (empty($id)) { return "";   }
-                        return get_the_title($id) . " [#". $id ."]";
+                    function suggest_get_title($id, $mode='posts') {
+                        if ($mode == 'posts') {
+                            if (empty($id)) { return ""; }
+                            return get_the_title($id) . " [#". $id ."]";
+                        } else {
+                            if (empty($id)) { return ""; }
+                            return get_the_author_meta('user_nicename',$id) . " [*" . $id . "]"; 
+                        }
                     }
 
                     /**
@@ -1209,7 +1228,6 @@ function diy_init() {
                     function diy_suggest_posts_callback() {
                         global $wpdb;
 
-                        $post_type =  $wpdb->escape($_GET['type']);
                         $group =  $wpdb->escape($_GET['group']);
                         $field =  $wpdb->escape($_GET['field']);
                         
@@ -1222,21 +1240,39 @@ function diy_init() {
                             $custom_args = $this->suggest_queries[$group][$field];
                         }
                         
-                        $args = array(
-                            'post_title_like' => $in,
-                            'post_type' => $post_type,
-                        );
+                        // if we are searching for posts
+                        if (isset($custom_args['post_type'])) {
+                            $defaults = array(
+                                'post_title_like' => $in,
+                                'post_type' => 'post',
+                            );
+
+                            $args = wp_parse_args($custom_args, $defaults);
+
+                            $the_query = new WP_Query($args);
+                            // The Loop
+                            while ( $the_query->have_posts() ) : $the_query->the_post();
+                                    echo  get_the_title(). " [#" . get_the_ID() . "]" . "\n";
+
+                            endwhile;
+                        } else {
+                            
+                            $defaults = array(
+                                'search'=>'*' . $in . '*',
+                            );
+                            
+                            $args = wp_parse_args($custom_args, $defaults);
+                            
+                            // we are searching for users
+                            $wp_user_search = new WP_User_Query(  $args );
+                            $users = $wp_user_search->get_results();
+                           
+                            foreach ($users as $user) {
+                               print  $user->user_nicename . " [*" .$user->ID . "]" .  "\n";
+                            }
+                        }
                         
-                        $args = wp_parse_args($custom_args,$args);
                         
-                        
-                        
-                        $the_query = new WP_Query($args);
-                        // The Loop
-                        while ( $the_query->have_posts() ) : $the_query->the_post();
-                                echo  get_the_title(). " [#" . get_the_ID() . "]" . "\n";
-                             
-                        endwhile;
 
                        
                         
@@ -1252,6 +1288,12 @@ function diy_init() {
                         }
                         return $where;
                     } // function
+                    
+                    
+                    
+                    
+                    
+                    
                     
                     
                     /**
@@ -1538,6 +1580,19 @@ function diy_init() {
                                                 $data[$key][$field]='';
                                         }
                                     }
+                                    
+                                    // if the [*#* string is found in the data
+                                    if (strlen(strstr($data[$key][$field],'[*'))>0) {
+                                        // extract it [# ] 
+                                        preg_match('/.*\[\*(.*)\]/', $data[$key][$field], $matches);
+                                        $data[$key][$field] =  $matches[1];
+                                        // Retrieve matching data from the posts table
+                                        $result = $wpdb->get_var("SELECT COUNT(*) FROM $wpdb->users AS wpusers  WHERE wpusers.ID = '" . $data[$key][$field] . "'");
+                                        if ($result == 0) {
+                                               $data[$key][$field]='';
+                                        }
+                                    }
+                                    
                                 } // end foreach
                             } // end foreach
                         } // end if
@@ -1848,7 +1903,7 @@ function diy_init() {
                             print '     jQuery(".suggest:not(.suggested)").each(';
                             print '         function () { ';
                             print '             jQuery(this).suggest(';
-                            print '                 ajaxurl + "?action=suggest_action&type=" + jQuery(this).data("suggest") + "&group=" + jQuery(this).data("group") + "&field=" + jQuery(this).data("field") + ""';
+                            print '                 ajaxurl + "?action=suggest_action&group=" + jQuery(this).data("group") + "&field=" + jQuery(this).data("field") + ""';
                             print '             );';
                             print '             jQuery(this).addClass("suggested");';
                             print '         }';

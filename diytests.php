@@ -246,7 +246,7 @@ $this->field(
                                 "value" => array(
                                     "type" => "suggest",
                                     "description" => "Suggest Posts Description",
-                                    "suggestions" => "post",
+                                    "wp_query" => array("post_type" => "post"),
                                 )
                             ) // end fields
                         ) // end array
@@ -257,17 +257,53 @@ $this->field(
                         array(
                             "metabox" => "field-tests-single", // the id of the metabox this field resides inside
                             "group" => "test-suggest-pages-single", // The form field name
-                            "title" => "Suggest Posts", // Title used when prompting for input
+                            "title" => "Suggest Pages", // Title used when prompting for input
                             "max" => "1",
                             "fields" => array(
                                 "value" => array(
                                     "type" => "suggest",
                                     "description" => "Suggest Pages Description",
-                                    "suggestions" => "page",
+                                    "wp_query" => array("post_type" => "page"),
                                 )
                             ) // end fields
                         ) // end array
                     ); 
+                    
+                    
+                    // Suggest pages field test
+                    $this->field(
+                        array(
+                            "metabox" => "field-tests-single", // the id of the metabox this field resides inside
+                            "group" => "test-suggest-all-users-single", // The form field name
+                            "title" => "Suggest All Users", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest All Users Description",
+                                    "wp_query" => array('orderby' => 'display_name'),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
+                    
+                    // Suggest pages field test
+                    $this->field(
+                        array(
+                            "metabox" => "field-tests-single", // the id of the metabox this field resides inside
+                            "group" => "test-suggest-subscribers-users-single", // The form field name
+                            "title" => "Suggest Subscribers", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "suggest",
+                                    "description" => "Suggest Subscribers Description",
+                                    "wp_query" => array('role' => 'subscriber'),
+                                )
+                            ) // end fields
+                        ) // end array
+                    ); 
+                    
                     
                     // Suggest location field test
                      $this->field(
@@ -326,8 +362,7 @@ $this->field(
                                 "value" => array(
                                     "type" => "suggest",
                                     "description" => "Suggest Posts Custom Filter",
-                                    "suggestions" => "page",
-                                    "wp_query" => array("post_type" => "abcd"),
+                                    "wp_query" => array("post_type" => "page"),
                                 )
                             ) // end fields
                         ) // end array
@@ -526,7 +561,7 @@ $this->field(
                                 "value" => array(
                                     "type" => "suggest",
                                     "description" => "Suggest Posts Description",
-                                    "suggestions" => "post",
+                                    "wp_query" => array("post_type" => "post"),
                                 )
                             ) // end fields
                         ) // end array
@@ -680,7 +715,7 @@ $this->field(
                                 "value" => array(
                                     "type" => "suggest",
                                     "description" => "Suggest Posts Description",
-                                    "suggestions" => "post",
+                                    "wp_query" => array("post_type" => "post"),
                                 )
                             ) // end fields
                         ) // end array
@@ -696,7 +731,7 @@ $this->field(
                                 "value" => array(
                                     "type" => "suggest",
                                     "description" => "Suggest Pages Description",
-                                    "suggestions" => "page",
+                                   "wp_query" => array("post_type" => "page"),
                                 )
                             ) // end fields
                         ) // end array
