@@ -205,8 +205,7 @@ function diy_init() {
                         "sortable" => false,
                         "style" => "",
                     );
-                    
-                    
+                         
                     /**
                     * Constructor
                     *
@@ -304,10 +303,8 @@ function diy_init() {
                         add_action( 'template_redirect', array( &$this, 'diy_script_server' ));
                         add_filter( 'query_vars', array( &$this, 'diy_query_vars' ));
                                          
-                        
                     } // end function 
-                    
-                    
+                                   
                     /**
                     * Return a link to the admin icon
                     * @param string $hook Current page hook
@@ -319,7 +316,6 @@ function diy_init() {
 			return $hook;
                     }
 		
-
                     /**
                     * For each filed defined by the child plugin add it to the appropriate options page/post metabox
                     * 
@@ -451,9 +447,6 @@ function diy_init() {
                         } // end foreach
                     } // end function
 
-                    
-
-
                     /**
                     *  Serve the CSS or JS when requested via a URL
                     *
@@ -477,7 +470,6 @@ function diy_init() {
                         }
                     } // function 
 
-
                     /**
                     *  Setup the query variable used to serve js and css data
                     *
@@ -490,8 +482,7 @@ function diy_init() {
                         $public_query_vars[] = 'diy';
                         return $public_query_vars;
                     } // function
-
-                   
+    
                     /**
                     * Create the Options page for the plugin
                     *
@@ -611,8 +602,6 @@ function diy_init() {
                         <?php
                     } // function
 
-
-
                     /**
                     * Register some default metaboxes on the plugins options page
                     *
@@ -638,7 +627,6 @@ function diy_init() {
                             add_meta_box('admin-section-like','Did you like this plugin?', array(&$this, 'diy_render_rating_metabox'), $this->page, 'side', 'core',array('section' => 'admin-section-like'));
                         }
                     } // function
-
 
                     /**
                     * Meta box for the documention link and the debugging popup 
@@ -666,13 +654,8 @@ function diy_init() {
                         print '<li><strong>Diy File:</strong> ' . $this->diy_file . '</li>';
                         print '<li><strong>Diy Path:</strong> ' . $this->diy_path . '</li>';
                         print '<li><strong>Diy URL:</strong> ' . $this->diy_url . '</li>';
-                        print '<li><strong>Meta:</strong> ' . var_export($this->meta,true) . '</li>';
-                        print '<li><strong>Metaboxes:</strong> ' . var_export($this->metaboxes,true) . '</li>';
-                        print '<li><strong>Suggest Queries:</strong> <pre>' . print_r($this->suggest_queries,true) . '</pre></li>';
-                        
                         print '</div>';
                     } // function
-
 
                     /**
                     * Meta box for the bug reporting info
@@ -775,7 +758,6 @@ function diy_init() {
                         wp_enqueue_style( 'farbtastic' );
                     } // function
 
-
                     /**
                     * Add scripts globally to all post.php and post-new.php admin screens
                     *
@@ -819,7 +801,6 @@ function diy_init() {
                         // Apply the field group defaults and store in the fields array
                         $this->fields[] =  wp_parse_args($group, $this->field_group_defaults );
                     } // end function
-
 
                     /**
                     * Define a meta box for  a post type or an options page and apply the defaults
@@ -905,7 +886,6 @@ function diy_init() {
                         return ( (!empty($p)) ? '<span class="field-prefix">' . $p . '</span>' : '');
                     } // function
                     
-                    
                     /**
                     * If any placeholder text is specified then add the html attribute to the element
                     *
@@ -917,7 +897,6 @@ function diy_init() {
                     function required($r) {
                         return ( ($r) ? ' required ' : '');
                     } // function
-                    
                     
                     /**
                     * Build a text input field widget
@@ -951,7 +930,6 @@ function diy_init() {
                         echo $this->description($args['description']);
                     } // function
 
-
                     /**
                     * Build a textarea field widget
                     *
@@ -980,7 +958,6 @@ function diy_init() {
 
                     } // function
 
-
                     /**
                     * Build a radio field widget
                     *
@@ -998,7 +975,6 @@ function diy_init() {
 
                         echo $this->description($args['description']);
                     } // function
-                    
                     
                     /**
                     * Build a selectbox field widget
@@ -1039,7 +1015,6 @@ function diy_init() {
                             // build the html map element
                             echo '<input type="hidden" name="' . $args['name'] . '" value="1" /><div id="map-' . $args['name'] . '" class="gmap field" data-zoom="5" data-lat="" data-long="" data-latfield="' . $args['latfield'] . '" data-longfield="' . $args['longfield'] . '" style="' .$this->height($args['height'])  . '" ></div>';
                     } // end function map
-
 
                     /**
                     * Render a color picker field widget
@@ -1229,10 +1204,8 @@ function diy_init() {
                         global $wpdb;
 
                         $group =  $wpdb->escape($_GET['group']);
-                        $field =  $wpdb->escape($_GET['field']);
-                        
+                        $field =  $wpdb->escape($_GET['field']);    
                         $in =  $wpdb->escape($_GET['q']);
-
                      
                         // get the custom query from the saved field definition
                         $custom_args = array();
@@ -1256,7 +1229,6 @@ function diy_init() {
 
                             endwhile;
                         } else {
-                            
                             $defaults = array(
                                 'search'=>'*' . $in . '*',
                             );
@@ -1271,15 +1243,16 @@ function diy_init() {
                                print  $user->user_nicename . " [*" .$user->ID . "]" .  "\n";
                             }
                         }
-                        
-                        
-
-                       
-                        
                         die(); // this is required to return a proper result
                     } // function
 
-                    
+                    /**
+                    * Modify the query WHERE clause when performing a suggest ajax request
+                    *
+                    * @since	0.0.2
+                    * @access	public
+                    * @return   void
+                    */ 
                     function diy_modify_posts_where( $where, &$wp_query ) {
                         global $wpdb;
                         // only modify the query when  post_title_like has been passed in
@@ -1288,14 +1261,7 @@ function diy_init() {
                         }
                         return $where;
                     } // function
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
+
                     /**
                     * Callback field widget
                     *
@@ -1325,8 +1291,6 @@ function diy_init() {
                         }
                         return $output;
                     } // function
-
-
 
                     /**
                     *  The Callback function to build a post metabox based on the arguments passed in from add_meta_box()
@@ -1390,11 +1354,7 @@ function diy_init() {
                         while ($counter < $sets) {
                             print '<ul class="field-group" data-set="' . $counter . '">';
                             foreach( $group['fields'] as $field_name => $field) {
-                                
-                                // Apply some defaults
-                                 
-                            
-                                
+    
                                 print '<li class="field-' . $field_name . '">';
                                 if ($is_group) { print "<label class='" . ($field['label_style'] == 'block' ? "" : "fl" ) . "' style='" . ($field['label_width'] ? "width:" . $field['label_width'] . "px" : "" ) . "'>" . $field['title'] . "</label>";}
 
@@ -2026,6 +1986,13 @@ function diy_init() {
                     } // end function
                 } // end class definition
 
+                /**
+                * Return an instance of an field from the database
+                * 
+                * @since    0.0.1
+                * @access   public
+                * @return   void
+                */ 	
                 function diy_option($group,$field,$instance = 0) {
                     // retrieve the option
                     $result = get_option($group);
@@ -2038,7 +2005,13 @@ function diy_init() {
                     }
                 } // end function
 
-
+                /**
+                * Return an instance of an post_meta field from the database
+                * 
+                * @since    0.0.1
+                * @access   public
+                * @return   void
+                */ 	
                 function diy_post_meta($post_id,$group,$field,$instance = 0) {
                     // retrieve the option
                     $result = get_post_meta($post_id,$group,true);
