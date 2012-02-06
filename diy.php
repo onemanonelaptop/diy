@@ -1371,7 +1371,7 @@ function diy_init() {
                                 $field['field'] = $field_name;
                                 
                                 // Set the current value of the field
-                                if (is_array($group_values)) {
+                                if (isset($group_values[$counter][$field_name])) {
                                         $field['value'] = $group_values[$counter][$field_name];
                                 } else {
                                         $field['value'] = "";
@@ -2025,9 +2025,9 @@ function diy_init() {
                 function diy_post_meta($post_id,$group,$field,$instance = 0) {
                     // retrieve the option
                     $result = get_post_meta($post_id,$group,true);
-
+                    if ($result == "") {return "";}
                     // if the value has been saved/set
-                    if ((bool) $result[$instance][$field]) {
+                    if (isset($result[$instance][$field])) {
                         return $result[$instance][$field];
                     } else {
                         // return an empty string like get_post_meta does if the key is not set

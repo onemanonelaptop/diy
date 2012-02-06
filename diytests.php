@@ -643,10 +643,7 @@ $this->field(
                             ) // end fields
                         ) // end array
                     );
-                    
-                    
-                    
-                    
+
                     $this->field(
                         array(
                             "metabox" => "field-post-tests-single", // the id of the metabox this field resides inside
