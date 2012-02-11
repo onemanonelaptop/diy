@@ -3,7 +3,7 @@
  * Plugin Name: Diy Plugin Test Suite
  * Plugin URI: http://github.com/onemanonelaptop/diy
  * Description: Field widget test suite for the diy plugin framework. When activated it adds one of every type of field to the options page, new post and new page screens
- * Version: 0.0.1
+ * Version: 0.0.5
  * Author: Rob Holmes
  * Author URI: http://github.com/onemanonelaptop
  */
@@ -26,7 +26,7 @@
 */
 
 // Check if the DIY framework plugin is installed and prompt if necessary
-if (!in_array( 'diy/diy.php', (array) get_option( 'active_plugins', array() )) ) {      
+if (!in_array( 'diy/diyplugin.php', (array) get_option( 'active_plugins', array() )) ) {      
         add_action('admin_notices', create_function('','echo "<div class=\"updated\"><p>This plugin requires the <em>Diy Plugin Framework</em> to operate, <a href=\"http://wordpress.org/extend/plugins/diy/\">install it now?</a></p></div>"; ')); 
 } // end if
 
@@ -83,6 +83,57 @@ function testdiy_init() {
                             'title' => 'Field Tests (Single)'
                         )
                     ); 
+                    
+                    // Checkbox field test
+                    $this->field(
+                        array(
+                            "taxonomy" => "category", // the id of the metabox this field resides inside
+                            "group" => "tax-checkbox-single", // The form field name
+                            "title" => "Checkbox", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "checkbox",
+                                    "description" => "Checkbox Description"
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    
+                    // Checkbox field test
+                    $this->field(
+                        array(
+                            "taxonomy" => "category", // the id of the metabox this field resides inside
+                            "group" => "tax-text-single", // The form field name
+                            "title" => "Checkbox", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "text",
+                                    "description" => "Checkbox Description"
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                      // Color picker field test
+                    $this->field(
+                        array(
+                            "taxonomy" => "category", 
+                            "group" => "tax-color-single", // The form field name
+                            "title" => "Color", // Title used when prompting for input
+                            "max" => "1",
+                            "fields" => array(
+                                "value" => array(
+                                    "type" => "color",
+                                    "description" => "Color Description",
+                                )
+                            ) // end fields
+                        ) // end array
+                    );
+                    
+                    
                     
                     // Checkbox field test
                     $this->field(
