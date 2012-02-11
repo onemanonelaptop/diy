@@ -47,6 +47,7 @@ if (!function_exists('diy_init')) {
                         * @var array Store the defined taxonomy field groups e.g. $taxmeta[taxonomy][group-id][group-instance][field-id]
                         */
                         protected $taxmeta = array();
+                        
                         /**
                         * @var string The Title that is displayed on the options page
                         */
@@ -132,6 +133,11 @@ if (!function_exists('diy_init')) {
                         */
                         protected $page = '';
 
+                         /**
+                        * @var  boolean   Has a gmap field been defined
+                        */
+                        protected $gmap = false;
+                        
                         /**
                         * @var  array    metaboxes
                         */
@@ -191,7 +197,6 @@ if (!function_exists('diy_init')) {
                             "default" => "",
                             "wp_query" => "",
                             "expanded" => false
-
                         );
 
                         /**
@@ -261,33 +266,27 @@ if (!function_exists('diy_init')) {
                             $this->diy_path = str_replace(basename( $this->diy_file),"",$this->diy_file);
                             $this->diy_url = str_replace(ABSPATH,trailingslashit(get_option( 'siteurl' )),$this->diy_path);
 
-               // Register the child plugins fields
-                                add_action('admin_init', array($this,'diy_fields'));              
+                            // Register the child plugins fields
+                            add_action('admin_init', array($this,'diy_fields'));              
 
                             // Save some effort if its an ajax request
                             if (!defined('DOING_AJAX') || !DOING_AJAX) {
-                                
-
-                            
+                   
                                 // Register the child plugins metaboxes
                                 add_action('admin_init', array($this,'diy_metaboxes'));
-                                
-
+                     
                                 // Save the custom post fields with the post data
                                 add_action('save_post', array(&$this,'diy_save_post')); 
 
                                 // Register the scripts and styles needed for metaboxes and fields
                                 add_action('admin_init', array(&$this,'diy_scripts_and_styles') );
-                                
-                                
-                                
+                         
                                 // Add the plugins options page	unless the Diy Class is being used just for metaboxes		
                                 if ($this->usage != 'meta') {
                                     
                                     // Force the plugin options page to have two columns
                                     add_filter('screen_layout_columns', array(&$this, 'diy_settings_page_columns'), 10, 2);
-                                    
-                                    
+                                
                                     // Add the plugins options page
                                     add_action( 'admin_menu', array($this,'diy_add_options_page') );
                                     
@@ -305,14 +304,12 @@ if (!function_exists('diy_init')) {
                             // add_action('wp_ajax_suggest_action', array(&$this,'diy_suggest_users_callback'));
                             add_filter( 'posts_where', array(&$this,'diy_modify_posts_where'), 10, 2 );
 
-
                             // Setup some query vars to serve javascript and css via a url
                             add_action( 'template_redirect', array( &$this, 'diy_script_server' ));
                             add_filter( 'query_vars', array( &$this, 'diy_query_vars' ));
 
                         } // end function 
 
-                        
                         
                         /**
                         * Add fields to a taxonomy add or edit page
@@ -333,8 +330,7 @@ if (!function_exists('diy_init')) {
                                     } else {
                                         $saved_meta_group = '';
                                     }
-                                   
-                                    
+                                  
                                     echo  ($currently_adding_taxonomy_term ? '<div class="form-field"><label >' . $taxmeta['title']  . '</label>' : "<table class='form-table'><tr class='form-field'><th scope='row'>" . $taxmeta['title'] . "</th><td>");		 
                                     // print the field group
                                     $this->print_field_group($taxmeta,$saved_meta_group);
@@ -343,20 +339,15 @@ if (!function_exists('diy_init')) {
                             } // end if
                         } // end function
                         
-                        
-                       
-                        
-                        
-                        
                         /**
                         * Return a link to the admin icon
                         * @param string $hook Current page hook
                         * @return string
                         */
-                        function diy_settings_page_icon( $hook ) {
-                            if ($hook == $this->hook) 
-                                return plugin_dir_url( __FILE__ ).$this->icon;
-                            return $hook;
+                        function diy_settings_page_icon( $page ) {
+                            if ($page == $this->page) 
+                                return $this->plugin_url . $this->icon;
+                            return $page;
                         }
 
                         /**
@@ -392,7 +383,7 @@ if (!function_exists('diy_init')) {
                                     add_action($field['taxonomy'] . '_edit_form_fields',array(&$this,'diy_taxfields'));
                                     add_action($field['taxonomy']. '_add_form_fields',array(&$this,'diy_taxfields'));  
                                     
-                                      add_action ( 'create_' . $field['taxonomy'], array(&$this,'diy_save_taxfields'));
+                                    add_action ( 'create_' . $field['taxonomy'], array(&$this,'diy_save_taxfields'));
                                     add_action ( 'edited_' . $field['taxonomy'], array(&$this,'diy_save_taxfields'));
 
                                 } else {  
@@ -420,6 +411,7 @@ if (!function_exists('diy_init')) {
                                         // Update the options table with the defaults
                                         update_option($field['group'],$build);
                                     } // end if
+                                    
                                 } // end if
                             } // end foreach
                         } // end function
@@ -440,8 +432,7 @@ if (!function_exists('diy_init')) {
                                 
                                 update_option( "taxonomy_" . $term_id . "_meta", $term_meta);
                             }
-                   
-                        }
+                        } // end function
                         
                         
                         /**
@@ -726,6 +717,7 @@ if (!function_exists('diy_init')) {
                             print '<li><strong>Diy File:</strong> ' . $this->diy_file . '</li>';
                             print '<li><strong>Diy Path:</strong> ' . $this->diy_path . '</li>';
                             print '<li><strong>Diy URL:</strong> ' . $this->diy_url . '</li>';
+                              print '<li><strong>GMap:</strong> ' . var_export($this->gmap,true) . '</li>';
                             print '<li><strong>Tax:</strong> <pre>' . print_r($this->taxmeta,true) . '</pre></li>';
                             print '</div>';
                         } // function
@@ -801,9 +793,10 @@ if (!function_exists('diy_init')) {
                                 wp_register_style($this->slug . '-admin' ,$this->plugin_url . 'admin.css');
                             }
 
-
-                            wp_register_script('gmap','http://maps.google.com/maps/api/js?sensor=false');
-
+                            // only load the google map if we have used one
+                            if ($this->gmap) {
+                                wp_register_script('gmap','http://maps.google.com/maps/api/js?sensor=false');
+                            }
                             // Add custom scripts and styles to the plugin/theme page only
                             add_action('admin_print_scripts-' . $this->page, array(&$this, 'diy_admin_scripts'));
                             add_action('admin_print_styles-' . $this->page, array(&$this,  'diy_admin_styles'));
@@ -874,6 +867,9 @@ if (!function_exists('diy_init')) {
                                 // Save all queiries for later use
                                 if ( $group['fields'][$field_name]['wp_query']) { 
                                     $this->suggest_queries[$group['group']][$field_name] = $group['fields'][$field_name]['wp_query'];
+                                }
+                                if ($group['fields'][$field_name]['type'] == 'map') {
+                                    $this->gmap = true; 
                                 }
                             }
                             
@@ -1102,6 +1098,9 @@ if (!function_exists('diy_init')) {
                                 echo '<input type="hidden" name="' . $args['name'] . '" value="1" /><div id="map-' . $args['name'] . '" class="gmap field" data-zoom="5" data-lat="" data-long="" data-latfield="' . $args['latfield'] . '" data-longfield="' . $args['longfield'] . '" style="' .$this->height($args['height'])  . '" ></div>';
                         } // end function map
 
+                        
+                        
+                        
                         /**
                         * Render a color picker field widget
                         *
