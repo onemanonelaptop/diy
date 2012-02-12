@@ -25,5 +25,20 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-include_once('diy.php');
+
+add_action( 'plugins_loaded', 'diy_init' );
+
+/**
+* Runs on plugins_loaded action and defines the Diy Class 
+*   
+* @since    0.1
+* @access   public
+* @return   void
+*/
+if (!function_exists('diy_init')) {
+    function diy_init() {
+        include_once('diy.php');
+        do_action('diy_init');
+    }
+}
 ?>
