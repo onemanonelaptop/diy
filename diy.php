@@ -147,7 +147,7 @@ if (!class_exists('Diy')) {
                 protected $exportable = false;
 
                 /**
-                * @var  array    icon file
+                * @var  string    icon filename 36px by 24px
                 */
                 protected $icon = '';
 
@@ -365,17 +365,7 @@ if (!class_exists('Diy')) {
                     } // end if
                 } // end function
 
-                /**
-                * Return a link to the admin icon
-                * @param string $hook Current page hook
-                * @return string
-                */
-                function diy_settings_page_icon( $page ) {
-                    if ($page == $this->page) 
-                        return $this->plugin_url . $this->icon;
-                    return $page;
-                }
-
+               
                 /**
                 * For each filed defined by the child plugin add it to the appropriate options page/post metabox
                 * 
@@ -658,7 +648,12 @@ if (!class_exists('Diy')) {
                     $data = array();
                     ?>
                     <div class="wrap">
-                        <?php screen_icon('options-general'); ?>
+                        <?php if (!empty($this->icon)) {
+                            print '<div class="icon32" style="background:url(' . $this->plugin_url . $this->icon . ');"></div>';
+                        } else {
+                            screen_icon('options-general');
+                        }
+                        ?>
                         <h2><?php print $this->settings_page_title; ?></h2>
                         <?php do_action('diy_settings_page_top',$this->page); ?>
                         <form id="settings" action="options.php" method="post" enctype="multipart/form-data">
@@ -709,14 +704,37 @@ if (!class_exists('Diy')) {
                 
                 
                 /**
+                 * Import function
+                 * 
+                 * @return void 
+                 */
+                function diy_import_settings( ) {
+                    
+                    
+                }
+                
+                
+                /**
                  * Export function
                  * Original function copyright Yoast (Yoast_WPSEO_Plugin_Admin)
-                 * @return boolean 
+                 * @return void 
                  */
                 function diy_export_settings( ) {
                     
-                    $content = "generated export content";
-
+                    $group = array();
+                    // Go through all the defined fields
+                    foreach($this->fields as $field) {
+                        $groups[] = $field['group'];                    
+                    }
+                    // Get only unique groups
+                    $groups = array_unique($groups);
+                    foreach ($groups as $group) {
+                        $data[$group] = get_option($group);
+                    }
+                    
+                    // serialise the array
+                    $content = serialize($data);
+                    
                     $dir = wp_upload_dir();
 
                     if ( !$handle = fopen( $dir['path'].'/' . $this->slug . '.ini', 'w' ) )
