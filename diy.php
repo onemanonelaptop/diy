@@ -140,6 +140,11 @@ if (!class_exists('Diy')) {
                 * @var  array    version
                 */
                 protected $version = '0.0.1';
+                
+                /**
+                * @var  boolean    can the plugins settings be exported
+                */
+                protected $exportable = false;
 
                 /**
                 * @var  array    icon file
@@ -260,6 +265,9 @@ if (!class_exists('Diy')) {
                     // Register the child plugins fields
                     add_action('admin_init', array($this,'diy_fields'));              
 
+                    // Export the settings if the $_POST['export']  is set
+                    add_action('admin_init', array($this,'diy_is_exporting')); 
+                    
                     // Save some effort if its an ajax request
                     if (!defined('DOING_AJAX') || !DOING_AJAX) {
 
@@ -281,10 +289,16 @@ if (!class_exists('Diy')) {
                             // Add the plugins options page
                             add_action( 'admin_menu', array($this,'diy_add_options_page') );
 
-                                // Add the predefined metaboxes to the plugin options page as long as generic isnt true
+                            // Add the predefined metaboxes to the plugin options page as long as generic isnt true
                             if ($this->generic == false) {
                                 add_action('admin_init', array(&$this,'diy_add_predefined_metaboxes') ); 
                             }
+                            
+                            // If the plugin is exportable then add the functionality
+                            if ($this->exportable == true) {
+                                add_action('admin_init', array(&$this,'diy_exportable_metabox') ); 
+                            }
+                            
                         }
 
 
@@ -637,6 +651,9 @@ if (!class_exists('Diy')) {
                 * @return   void
                 */
                 public function diy_render_options_page() {
+                    
+                   
+                    
                     global $screen_layout_columns;
                     $data = array();
                     ?>
@@ -677,7 +694,50 @@ if (!class_exists('Diy')) {
                     </script>
                     <?php
                 } // function
+                        
+                /**
+                * If we are exporting the settings then do it
+                */
+                function diy_is_exporting()  {
+                    if ( isset($_GET[$this->slug . '-export']) ) {
+                        $url = $this->diy_export_settings();
+                        if ($url) {
+                            wp_redirect($url);
+                        } 
+                    }
+                } // end function
+                
+                
+                /**
+                 * Export function
+                 * Original function copyright Yoast (Yoast_WPSEO_Plugin_Admin)
+                 * @return boolean 
+                 */
+                function diy_export_settings( ) {
+                    
+                    $content = "generated export content";
 
+                    $dir = wp_upload_dir();
+
+                    if ( !$handle = fopen( $dir['path'].'/' . $this->slug . '.ini', 'w' ) )
+                        die();
+
+                    if ( !fwrite($handle, $content) ) 
+                        die();
+
+                    fclose($handle);
+
+                    require_once (ABSPATH . 'wp-admin/includes/class-pclzip.php');
+
+                    chdir( $dir['path'] );
+                    $zip = new PclZip('./' . $this->slug . '.zip');
+                    if ($zip->create('./' . $this->slug . '.ini') == 0)
+                            return false;
+
+                    return $dir['url'].'/' . $this->slug . '.zip'; 
+                } // end function
+                
+                
                 /**
                 * Register some default metaboxes on the plugins options page
                 *
@@ -704,6 +764,30 @@ if (!class_exists('Diy')) {
                     }
                 } // function
 
+                
+                function diy_exportable_metabox() {
+                     add_meta_box('admin-section-exportable','Import & Export Settings', array(&$this, 'diy_render_exportable_metabox'), $this->page, 'side', 'core',array('section' => 'admin-section-exportable'));
+                   
+                }
+                
+                
+                 /**
+                * Meta box for import/export
+                *
+                * @since	0.0.1
+                * @access	public
+                * @return   void
+                */
+                function diy_render_exportable_metabox() {
+                   print '<p><strong>Import</strong></p>';
+                   print '<p>You can import any previosly exported settings here</p>';
+                   print '<p><input type="file" name="' . $this->slug. '-import" /></p>';
+                   print '<p><strong>Export</strong></p>';
+                   print '<p>You can export your plugin settings here.</p><p>You can re-import them again later on or import them on another site.</p><a href="?' . $this->slug . '-export=true" class="button">Export Settings</a>';
+                  
+                }
+                
+                
                 /**
                 * Meta box for the documention link and the debugging popup 
                 *
@@ -716,7 +800,7 @@ if (!class_exists('Diy')) {
                     print "<li><a id='diy-support' href='https://github.com/onemanonelaptop/" . $this->slug . "/wiki" . "' target='_blank' style=''>Plugin Documentation</a></li>";
                     print '<li><a title="Plugin Debug Information" href="#TB_inline?width=640&inlineId=debuginfo" class="thickbox">Debug Information</a></li>';
                     print "</ul>"; 
-                    print '<div id="debuginfo" style="display:none;"><p><b>diy Version:</b><br/>' . $this->version. '</p><p><b>Settings:</b><br/>';
+                    print '<div id="debuginfo" style="display:none;"><p><b>diy Version:</b>' . $this->version. '</p><p><b>Settings:</b>';
                     print '<li><strong>Slug: </strong>' . $this->slug . '</li>';
                     print '<li><strong>Settings Page Title:</strong> ' . $this->settings_page_title . '</li>';
                     print '<li><strong>Settings Page Link:</strong> ' . $this->settings_page_link . '</li>';
@@ -917,7 +1001,11 @@ if (!class_exists('Diy')) {
                 * @return   string  
                 */
                 static function height($height) {
-                    return ((!empty($height)) ? ' height:'. $height . 'px;' : '');
+                    $units = 'px';
+                    if (strpos($height, 'px') !== false) { $units = ''; }
+                    if (strpos($height, 'em') !== false) { $units = ''; }
+                    if (strpos($height, '%') !== false) { $units = ''; }
+                    return ((!empty($height)) ? ' height:'. $height .  $units . ';' : '');
                 } // function
 
                 /**
@@ -929,9 +1017,11 @@ if (!class_exists('Diy')) {
                 * @return   string 
                 */
                 public static function width($width) {
-                  
-                    
-                    return  ((!empty($width)) ? ' width:'. $width . ($width == '100%' ? '' : 'px') . ';' : '');
+                    $units = 'px';
+                    if (strpos($width, 'px') !== false) { $units = ''; }
+                    if (strpos($width, 'em') !== false) { $units = ''; }
+                    if (strpos($width, '%') !== false) { $units = ''; }
+                    return  ((!empty($width)) ? ' width:'. $width . $units . ';' : '');
                 } // function
 
                 /**
@@ -943,7 +1033,7 @@ if (!class_exists('Diy')) {
                 * @return   void
                 */
                 public static function description($d) {
-                    return ( (!empty($d)) ? '<br />' . '<span class="description">'.$d. '</span>' : '');
+                    return ( (!empty($d)) ?  '<div class="description">'.$d. '</div>' : '');
                 } // function
 
                 /**
@@ -1255,7 +1345,7 @@ if (!class_exists('Diy')) {
                             //print var_export(wp_create_thumbnail( $file, 4 ),true);
 
                         } 
-                        print "<div class='option_preview' ><a href='" . $original . "'>" . $this->filetourl($thumb) . "<br/>" .basename($original) . "</a></div>";
+                        print "<div class='option_preview' ><a href='" . $original . "'>" . $this->filetourl($thumb) . "" .basename($original) . "</a></div>";
                     }
                 } // end function
 
@@ -2140,75 +2230,66 @@ if (!class_exists('Diy')) {
 
                 } // end function
                 
-                
-                
-       
-                
-                
-                
-                
-                
-                
+                /**
+                * Return an instance of an field from the database
+                * 
+                * @since    0.0.1
+                * @access   public
+                * @return   void
+                */ 	
+                public static function get_option($group,$field,$instance = 0) {
+                    // retrieve the option
+                    $result = get_option($group);
+                    // if the value has been saved/set
+                    if (is_array($result) && array_key_exists($field, $result[$instance])) {
+                        return $result[$instance][$field];
+                    } else {
+                        // return an empty string like get_post_meta does if the key is not set
+                        return '';
+                    }
+                } // end function
+
+                /**
+                * Return an instance of an post_meta field from the database
+                * 
+                * @since    0.0.1
+                * @access   public
+                * @return   void
+                */ 	
+                public static function get_post_meta($post_id,$group,$field,$instance = 0) {
+                    // retrieve the option
+                    $result = get_post_meta($post_id,$group,true);
+                    if ($result == "") {return "";}
+                    // if the value has been saved/set
+                    if (isset($result[$instance][$field])) {
+                        return $result[$instance][$field];
+                    } else {
+                        // return an empty string like get_post_meta does if the key is not set
+                        return '';
+                    }
+                } // end function
+
+                /**
+                * Return an instance of an post_meta field from the database
+                * 
+                * @since    0.0.1
+                * @access   public
+                * @return   void
+                */ 	
+                public static function get_tax_meta($tax_id,$group,$field,$instance = 0) {
+                    // retrieve the option
+                    $result = get_post_meta($post_id,$group,true);
+                    if ($result == "") {return "";}
+                    // if the value has been saved/set
+                    if (isset($result[$instance][$field])) {
+                        return $result[$instance][$field];
+                    } else {
+                        // return an empty string like get_post_meta does if the key is not set
+                        return '';
+                    }
+                } // end function
+    
             } // end class definition
-
-            /**
-            * Return an instance of an field from the database
-            * 
-            * @since    0.0.1
-            * @access   public
-            * @return   void
-            */ 	
-            function diy_option($group,$field,$instance = 0) {
-                // retrieve the option
-                $result = get_option($group);
-                // if the value has been saved/set
-                 if (is_array($result) && array_key_exists($field, $result[$instance])) {
-                    return $result[$instance][$field];
-                } else {
-                    // return an empty string like get_post_meta does if the key is not set
-                    return '';
-                }
-            } // end function
-
-            /**
-            * Return an instance of an post_meta field from the database
-            * 
-            * @since    0.0.1
-            * @access   public
-            * @return   void
-            */ 	
-            function diy_post_meta($post_id,$group,$field,$instance = 0) {
-                // retrieve the option
-                $result = get_post_meta($post_id,$group,true);
-                if ($result == "") {return "";}
-                // if the value has been saved/set
-                if (isset($result[$instance][$field])) {
-                    return $result[$instance][$field];
-                } else {
-                    // return an empty string like get_post_meta does if the key is not set
-                    return '';
-                }
-            } // end function
-
-            /**
-            * Return an instance of an post_meta field from the database
-            * 
-            * @since    0.0.1
-            * @access   public
-            * @return   void
-            */ 	
-            function diy_tax_meta($tax_id,$group,$field,$instance = 0) {
-                // retrieve the option
-                $result = get_post_meta($post_id,$group,true);
-                if ($result == "") {return "";}
-                // if the value has been saved/set
-                if (isset($result[$instance][$field])) {
-                    return $result[$instance][$field];
-                } else {
-                    // return an empty string like get_post_meta does if the key is not set
-                    return '';
-                }
-            } // end function
 
 } // end if class exists
 ?>
