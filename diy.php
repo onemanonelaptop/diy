@@ -287,7 +287,7 @@ if (!class_exists('Diy')) {
                             add_filter('screen_layout_columns', array(&$this, 'diy_settings_page_columns'), 10, 2);
 
                             // Add the plugins options page
-                            add_action( 'admin_menu', array($this,'diy_add_options_page') );
+                            add_action( 'admin_menu', array($this,'diy_options_page') );
 
                             // Add the predefined metaboxes to the plugin options page as long as generic isnt true
                             if ($this->generic == false) {
@@ -579,7 +579,7 @@ if (!class_exists('Diy')) {
                 * @access	public
                 * @return   void
                 */
-                public function diy_add_options_page() {
+                public function diy_options_page() {
                     // Add a theme page or an option page depending on the diy usage
                     if ($this->usage == 'theme') {
                         $this->page = add_theme_page( __($this->settings_page_title), __($this->settings_page_link), 'edit_theme_options', $this->slug, array(&$this,'diy_render_options_page' ));
