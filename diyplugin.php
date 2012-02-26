@@ -3,7 +3,7 @@
  * Plugin Name: Diy Plugin Framework
  * Plugin URI: http://github.com/onemanonelaptop/diy
  * Description: A Diy Plugin Framework for creating plugins
- * Version: 0.0.5
+ * Version: 0.0.7
  * Author: Rob Holmes
  * Author URI: http://github.com/onemanonelaptop
  */

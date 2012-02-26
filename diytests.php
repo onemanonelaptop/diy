@@ -3,7 +3,7 @@
  * Plugin Name: Diy Plugin Test Suite
  * Plugin URI: http://github.com/onemanonelaptop/diy
  * Description: Field widget test suite for the diy plugin framework. When activated it adds one of every type of field to the options page, new post and new page screens
- * Version: 0.0.5
+ * Version: 0.0.7
  * Author: Rob Holmes
  * Author URI: http://github.com/onemanonelaptop
  */
@@ -470,20 +470,22 @@ $this->field(
                     );
                     
                     // Color picker multiple and sortable field test
+                    
+                    
                     $this->field(
                         array(
-                            "metabox" => "field-tests-multi", // the id of the metabox this field resides inside
-                            "group" => "test-color-multi", // The form field name
-                            "title" => "Sortable Colors", // Title used when prompting for input
+                            "metabox" => "field-tests-multi",
+                            "group" => "test-color-multi", 
+                            "title" => "Sortable Colors", 
                             "max" => "5",
                             "sortable" => true,
                             "fields" => array(
                                 "value" => array(
                                     "type" => "color",
-                                    "description" => "Multi Color Description"
+                                    "description" => "Choose a color"
                                 )
-                            ) // end fields
-                        ) // end array
+                            )
+                        )
                     ); 
                     
                     // Attachment multiple field test
@@ -1005,8 +1007,10 @@ $this->field(
                  * @return  void
                  */
                 function start() {
-                    
+                   
                 }
+                
+                
                 
         } // end class
         $testdiy = new TestDiy(__FILE__); 
